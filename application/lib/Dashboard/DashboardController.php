@@ -3,10 +3,11 @@
 namespace Dashboard;
 
 
-class DashboardController
+use App\ControllerAbstract;
+
+class DashboardController extends ControllerAbstract
 {
     public function index()
     {
-
     }
 }

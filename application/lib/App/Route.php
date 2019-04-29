@@ -3,6 +3,8 @@
 namespace App;
 
 
+use App\Helper\Url;
+
 class Route
 {
     /**
@@ -13,7 +15,7 @@ class Route
     /**
      * @var array
      */
-    private $routingRules = [];
+    private $rules = [];
 
     /**
      * @var Request
@@ -22,8 +24,6 @@ class Route
 
     /**
      * Predefiniowane wyrazenia dostepne pod kolejnymi kluczami.
-     * Przykladowe uzycie w from.url: {{slug}}
-     *
      */
     private const PREDEFINED_PATTERNS_MAP = [
         'multiParams' => '(?:[\/][a-z0-9_-]*)*',
@@ -35,7 +35,7 @@ class Route
 
     private function __construct()
     {
-        $this->loadRoutingRules();
+        $this->loadRules();
     }
 
     public static function getInstance(): Route
@@ -59,60 +59,109 @@ class Route
         return $this;
     }
 
-    private function loadRoutingRules()
+    /**
+     *
+     */
+    private function loadRules(): void
     {
         $routingFiles = array_diff(scandir(ROUTING), ['.', '..']);
         foreach ($routingFiles as $routingFile) {
+            if (strpos($routingFile, '.php') === false) {
+                continue;
+            }
+
             $routingGroupName = str_replace('.php', '', $routingFile);
             $routingGroupRules = require ROUTING . $routingFile;
 
             foreach ($routingGroupRules as $routingGroupRuleName => $routingGroupRule) {
-                $this->routingRules[$routingGroupName . '-' . $routingGroupRuleName] = $routingGroupRule;
+                $this->rules[$routingGroupName . '-' . $routingGroupRuleName] = $routingGroupRule;
             }
         }
     }
 
     /**
-     *
+     * @return array
      */
-    private function analyzePath()
+    public function getRules(): array
     {
-        foreach ($this->routingRules as $routingRuleName => $routingRule) {
-            $path = str_replace('/', '\/', $routingRule['path']);
-            preg_match_all('/(?:(?:\[\[.*?)?{{[a-zA-Z]+(?::[a-zA-Z]+)?}}(?:\/?\]\])?)/', $path, $pathGroup);
+        return $this->rules;
+    }
 
-            if (empty($pathGroup)) {
+    /**
+     * @param string $path
+     *
+     * @return string|null
+     */
+    private function prepareRegexp(string $path): ?string
+    {
+        $path = str_replace('/', '\/', $path);
+        preg_match_all('/(?:(?:\[\[.*?)?{{[a-zA-Z]+(?::[a-zA-Z]+)?}}(?:\/?\]\])?)/', $path, $pathGroup);
+
+        if (empty($pathGroup[0])) {
+            return null;
+        }
+
+        $regexp = $path;
+        $pathGroup = $pathGroupCopy = $pathGroup[0];
+        foreach ($pathGroup as &$group) {
+            if (!preg_match('/{{([a-zA-Z]+)(?::([a-zA-Z]+))?}}/', $group, $groupAnalyzed)) {
                 continue;
             }
 
-            $regexp = $path;
-            $pathGroup = $pathGroupCopy = $pathGroup[0];
-            foreach ($pathGroup as &$group) {
-                if (!preg_match('/{{([a-zA-Z]+)(?::([a-zA-Z]+))?}}/', $group, $groupAnalyzed)) {
-                    continue;
-                }
-
-                $groupRegexp = null;
-                if ($groupAnalyzed[1] === 'multiParams') {
-                    $groupRegexp = self::PREDEFINED_PATTERNS_MAP['multiParams'];
-                } elseif (isset($groupAnalyzed[2]) && isset(self::PREDEFINED_PATTERNS_MAP[$groupAnalyzed[2]])) {
-                    $groupRegexp = self::PREDEFINED_PATTERNS_MAP[$groupAnalyzed[2]];
-                }
-
-                if ($groupRegexp === null) {
-                    $groupRegexp = '.*?';
-                }
-
-                $pattern = '(?<' . $groupAnalyzed[1] . '>' . $groupRegexp . ')';
-
-                $group = str_replace($groupAnalyzed[0], $pattern, $group);
-
-                if (preg_match('/^\[\[(.*)\]\]$/', $group, $optionalPattern)) {
-                    $group = str_replace($optionalPattern[0], '(?:' . $optionalPattern[1] . ')?', $group);
-                }
+            $groupRegexp = null;
+            if ($groupAnalyzed[1] === 'multiParams') {
+                $groupRegexp = self::PREDEFINED_PATTERNS_MAP['multiParams'];
+            } elseif (isset($groupAnalyzed[2]) && isset(self::PREDEFINED_PATTERNS_MAP[$groupAnalyzed[2]])) {
+                $groupRegexp = self::PREDEFINED_PATTERNS_MAP[$groupAnalyzed[2]];
             }
 
-            $regexp = '/^' . str_replace($pathGroupCopy, $pathGroup, $regexp) . '$/';
+            if ($groupRegexp === null) {
+                $groupRegexp = '.*?';
+            }
+
+            $pattern = '(?<' . $groupAnalyzed[1] . '>' . $groupRegexp . ')';
+
+            $group = str_replace($groupAnalyzed[0], $pattern, $group);
+
+            if (preg_match('/^\[\[(.*)\]\]$/', $group, $optionalPattern)) {
+                $group = str_replace($optionalPattern[0], '(?:' . $optionalPattern[1] . ')?', $group);
+            }
+        }
+
+        return '/^' . str_replace($pathGroupCopy, $pathGroup, $regexp) . '$/';
+    }
+
+    /**
+     * @param string $routeName
+     * @param string $url
+     *
+     * @return bool
+     */
+    public function validate(string $routeName, $url): bool
+    {
+        if (!isset($this->rules[$routeName]) || ($regexp = $this->prepareRegexp($this->rules[$routeName]['path'])) === null) {
+            return false;
+        }
+
+        if (($strPos = strpos($url, '?')) !== false) {
+            $url = substr($url, 0, $strPos);
+        }
+
+        var_dump($regexp, $url);
+
+        return (bool)preg_match($regexp, $url);
+    }
+
+    /**
+     * @return string|null
+     */
+    private function analyzePath(): ?string
+    {
+        foreach ($this->rules as $routingRuleName => $routingRule) {
+            if (($regexp = $this->prepareRegexp($routingRule['path'])) === null) {
+                continue;
+            }
+
             if (preg_match($regexp, $this->request->getPath(), $matches)) {
                 if (isset($matches['multiParams'])) {
                     $multiParams = array_values(array_filter(explode('/', $matches['multiParams'])));
@@ -135,15 +184,25 @@ class Route
 
                     $this->request->appendGet($param, $value);
                 }
-                break;
+
+                return $routingRuleName;
             }
         }
 
-        var_dump($this->request->get());
+        return null;
     }
 
-    public function run()
+    /**
+     * @return array
+     */
+    public function run(): array
     {
-        $this->analyzePath();
+        $class = $method = null;
+        if (($routingRuleName = $this->analyzePath()) !== null) {
+            $class = !empty($this->rules[$routingRuleName]['class']) ? $this->rules[$routingRuleName]['class'] : null;
+            $method = !empty($this->rules[$routingRuleName]['method']) ? $this->rules[$routingRuleName]['method'] : null;
+        }
+
+        return [$class, $method];
     }
 }

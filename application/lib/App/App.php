@@ -3,13 +3,10 @@
 namespace App;
 
 
+use App\Helper\Url;
+
 class App
 {
-    ///**
-    // * @var Request
-    // */
-    //private $request;
-
     /**
      * @var Route
      */
@@ -27,6 +24,10 @@ class App
      */
     private function setEnvironment()
     {
+        define('CONFIG', APP . 'config' . DIRECTORY_SEPARATOR);
+        define('ROUTING', CONFIG . 'routing' . DIRECTORY_SEPARATOR);
+        define('LIB', APP . 'lib' . DIRECTORY_SEPARATOR);
+
         if (!empty($environment = getenv('ENVIRONMENT'))) {
             define('ENVIRONMENT', $environment);
         }
@@ -45,6 +46,7 @@ class App
 
     public function run()
     {
-        $this->route->run();
+        list($class, $method) = $this->route->run();
+        var_dump(Url::make('basic-article', 'dashboard/dsadsadd/page/3/add/super/asd?ad=da'));
     }
 }

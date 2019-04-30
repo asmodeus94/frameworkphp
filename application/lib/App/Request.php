@@ -8,6 +8,11 @@ use App\Cookie\Cookie;
 class Request
 {
     /**
+     * @var Request
+     */
+    private static $instance;
+
+    /**
      * @var string
      */
     private $requestMethod;
@@ -32,7 +37,6 @@ class Request
      */
     private $post = null;
 
-    private static $instance;
 
     private function __construct()
     {
@@ -95,6 +99,8 @@ class Request
     }
 
     /**
+     * Dodaje parametr wraz z wartością do tablicy get
+     *
      * @param string $param
      * @param string $value
      */

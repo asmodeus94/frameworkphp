@@ -23,7 +23,7 @@ class Route
     private $request;
 
     /**
-     * Predefiniowane wyrazenia dostepne pod kolejnymi kluczami.
+     * Predefiniowane wyrażenia regularne
      */
     private const PREDEFINED_PATTERNS_MAP = [
         'multiParams' => '(?:[\/][a-z0-9_-]*)*',
@@ -60,7 +60,7 @@ class Route
     }
 
     /**
-     *
+     * Ładuje do tablicy wszystkie reguły dot. routingu
      */
     private function loadRules(): void
     {
@@ -88,6 +88,8 @@ class Route
     }
 
     /**
+     * Na podstawie reguły routingu (jej ścieżki) tworzy wyr. regularne umożliwiające podanej przez użytkownika ścieżki
+     *
      * @param string $path
      *
      * @return string|null
@@ -96,10 +98,6 @@ class Route
     {
         $path = str_replace('/', '\/', $path);
         preg_match_all('/(?:(?:\[\[.*?)?{{[a-zA-Z]+(?::[a-zA-Z]+)?}}(?:\/?\]\])?)/', $path, $pathGroup);
-
-        if (empty($pathGroup[0])) {
-            return null;
-        }
 
         $regexp = $path;
         $pathGroup = $pathGroupCopy = $pathGroup[0];
@@ -137,7 +135,7 @@ class Route
      *
      * @return bool
      */
-    public function validate(string $routeName, $url): bool
+    public function validate(string $routeName, string $url): bool
     {
         if (!isset($this->rules[$routeName]) || ($regexp = $this->prepareRegexp($this->rules[$routeName]['path'])) === null) {
             return false;
@@ -147,45 +145,45 @@ class Route
             $url = substr($url, 0, $strPos);
         }
 
-        var_dump($regexp, $url);
-
         return (bool)preg_match($regexp, $url);
     }
 
     /**
-     * @return string|null
+     * Na podstawie przekazanej przez użytkownika ścieżki dobiera odpowiedni routing
+     *
+     * @return string|null Nazwa routingu lub null w przypadku niepowodzenia
      */
     private function analyzePath(): ?string
     {
         foreach ($this->rules as $routingRuleName => $routingRule) {
-            if (($regexp = $this->prepareRegexp($routingRule['path'])) === null) {
-                continue;
-            }
+            $routingRule['path'] = is_array($routingRule['path']) ? $routingRule['path'] : [$routingRule['path']];
+            foreach ($routingRule['path'] as $path) {
+                $regexp = $this->prepareRegexp($path);
+                if (preg_match($regexp, $this->request->getPath(), $matches)) {
+                    if (isset($matches['multiParams'])) {
+                        $multiParams = array_values(array_filter(explode('/', $matches['multiParams'])));
+                        $nOfEle = count($multiParams);
+                        if ($nOfEle % 2 !== 0) {
+                            unset($multiParams[--$nOfEle]);
+                        }
 
-            if (preg_match($regexp, $this->request->getPath(), $matches)) {
-                if (isset($matches['multiParams'])) {
-                    $multiParams = array_values(array_filter(explode('/', $matches['multiParams'])));
-                    $nOfEle = count($multiParams);
-                    if ($nOfEle % 2 !== 0) {
-                        unset($multiParams[--$nOfEle]);
+                        for ($index = 0; $index < $nOfEle - 1; $index += 2) {
+                            $this->request->appendGet($multiParams[$index], $multiParams[$index + 1]);
+                        }
+
+                        unset($matches['multiParams']);
                     }
 
-                    for ($index = 0; $index < $nOfEle - 1; $index += 2) {
-                        $this->request->appendGet($multiParams[$index], $multiParams[$index + 1]);
+                    foreach ($matches as $param => $value) {
+                        if (!is_string($param) || $value === '') {
+                            continue;
+                        }
+
+                        $this->request->appendGet($param, $value);
                     }
 
-                    unset($matches['multiParams']);
+                    return $routingRuleName;
                 }
-
-                foreach ($matches as $param => $value) {
-                    if (!is_string($param) || $value === '') {
-                        continue;
-                    }
-
-                    $this->request->appendGet($param, $value);
-                }
-
-                return $routingRuleName;
             }
         }
 
@@ -193,6 +191,8 @@ class Route
     }
 
     /**
+     * Uruchamia routing
+     *
      * @return array
      */
     public function run(): array

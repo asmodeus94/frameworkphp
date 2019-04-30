@@ -3,7 +3,7 @@
 namespace App;
 
 
-use App\Helper\Url;
+use App\Autowiring\Autowiring;
 
 class App
 {
@@ -14,20 +14,27 @@ class App
 
     public function __construct()
     {
+        $this->setConstants();
         $this->setEnvironment();
-        $this->route = Route::getInstance();
-        $this->route->setRequest(Request::getInstance());
     }
 
     /**
-     *
+     * Ustawia stałe
      */
-    private function setEnvironment()
+    private function setConstants(): void
     {
         define('CONFIG', APP . 'config' . DIRECTORY_SEPARATOR);
+        define('CACHE', APP . 'cache' . DIRECTORY_SEPARATOR);
         define('ROUTING', CONFIG . 'routing' . DIRECTORY_SEPARATOR);
-        define('LIB', APP . 'lib' . DIRECTORY_SEPARATOR);
 
+        define('TWIG_CACHE', CACHE . 'twig' . DIRECTORY_SEPARATOR);
+    }
+
+    /**
+     * Ustawia zmienne środowiskowe
+     */
+    private function setEnvironment(): void
+    {
         if (!empty($environment = getenv('ENVIRONMENT'))) {
             define('ENVIRONMENT', $environment);
         }
@@ -44,9 +51,93 @@ class App
         ini_set('xdebug.var_display_max_data', -1);
     }
 
+    /**
+     * @param string $controller
+     * @param string $method
+     *
+     * @return bool
+     * @throws \ReflectionException
+     */
+    private function isCallable(string $controller, string $method): bool
+    {
+        $reflection = new \ReflectionClass($controller);
+        if ($reflection->isAbstract() || !$reflection->getConstructor()->isPublic()
+            || !$reflection->isSubclassOf('App\ControllerAbstract') || !$reflection->hasMethod($method)) {
+            return false;
+        }
+
+        $reflection = new \ReflectionMethod($controller, $method);
+
+        return $reflection->isPublic() && !$reflection->isStatic();
+    }
+
+    /**
+     * @param string $controller
+     * @param string $method
+     *
+     * @return array
+     * @throws \ReflectionException
+     */
+    private function prepareArguments(string $controller, string $method)
+    {
+        $arguments = [];
+        $reflection = new \ReflectionMethod($controller, $method);
+        $params = $reflection->getParameters();
+        foreach ($params as $param) {
+            $name = strtolower($param->getName());
+            if (!in_array($name, ['get', 'post']) || (string)$param->getType() !== 'array') {
+                continue;
+            }
+
+            $allowsNull = $param->getType()->allowsNull();
+
+            if ($name === 'get') {
+                $get = Request::getInstance()->get();
+                $arguments[] = $allowsNull ? $get : (!empty($get) ? $get : []);
+            }
+
+            if ($name === 'post') {
+                $post = Request::getInstance()->post();
+                $arguments[] = $allowsNull ? $post : (!empty($post) ? $post : []);
+            }
+        }
+
+        return $arguments;
+    }
+
+    /**
+     * Uruchamia aplikację poprzez wywołanie metody kontrolera
+     */
     public function run()
     {
+        $this->route = Route::getInstance();
+        $this->route->setRequest(Request::getInstance());
+
         list($class, $method) = $this->route->run();
-        var_dump(Url::make('basic-article', 'dashboard/dsadsadd/page/3/add/super/asd?ad=da'));
+        $responseCode = null;
+
+        if ($class !== null) {
+            $method = $method !== null ? $method : 'index';
+            try {
+                if ($this->isCallable($class, $method)) {
+                    $autowiring = new Autowiring($class, $method);
+                    list($constructorArguments, $methodArguments) = $autowiring->analyzeController();
+
+                    $controller = empty($constructorArguments) ? new $class()
+                        : call_user_func_array([new \ReflectionClass($class), 'newInstance'], $constructorArguments);
+
+                    call_user_func_array([$controller, $method], $methodArguments);
+                    $responseCode = 200;
+                }
+            } catch (\Exception $ex) {
+                $responseCode = 500;
+            }
+        }
+
+        if (!isset($responseCode)) {
+            $responseCode = 404;
+        }
+
+        http_response_code($responseCode);
     }
 }

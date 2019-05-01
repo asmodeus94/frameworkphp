@@ -4,20 +4,21 @@ namespace Dashboard;
 
 
 use App\ControllerAbstract;
-use DB\DB;
+use App\Request;
 
 class DashboardController extends ControllerAbstract
 {
-    public function __construct(DB $db)
+    public function __construct(\DB $db)
     {
+        var_dump($db->query('SELECT * FROM `users`'));
     }
 
-    public function index(array $get, ?DB $db = null)
+    public function index(\DB $db)
     {
         echo 'index';
     }
 
-    public function test(?array $get, array $post)
+    public function test()
     {
         echo 'test';
     }

@@ -22,6 +22,8 @@ class Route
      */
     private $request;
 
+    const DEFAULT_METHOD = 'index';
+
     /**
      * Predefiniowane wyrażenia regularne
      */

@@ -72,40 +72,6 @@ class App
     }
 
     /**
-     * @param string $controller
-     * @param string $method
-     *
-     * @return array
-     * @throws \ReflectionException
-     */
-    private function prepareArguments(string $controller, string $method)
-    {
-        $arguments = [];
-        $reflection = new \ReflectionMethod($controller, $method);
-        $params = $reflection->getParameters();
-        foreach ($params as $param) {
-            $name = strtolower($param->getName());
-            if (!in_array($name, ['get', 'post']) || (string)$param->getType() !== 'array') {
-                continue;
-            }
-
-            $allowsNull = $param->getType()->allowsNull();
-
-            if ($name === 'get') {
-                $get = Request::getInstance()->get();
-                $arguments[] = $allowsNull ? $get : (!empty($get) ? $get : []);
-            }
-
-            if ($name === 'post') {
-                $post = Request::getInstance()->post();
-                $arguments[] = $allowsNull ? $post : (!empty($post) ? $post : []);
-            }
-        }
-
-        return $arguments;
-    }
-
-    /**
      * Uruchamia aplikację poprzez wywołanie metody kontrolera
      */
     public function run()
@@ -117,7 +83,6 @@ class App
         $responseCode = null;
 
         if ($class !== null) {
-            $method = $method !== null ? $method : 'index';
             try {
                 if ($this->isCallable($class, $method)) {
                     $autowiring = new Autowiring($class, $method);

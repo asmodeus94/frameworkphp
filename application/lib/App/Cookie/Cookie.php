@@ -2,15 +2,11 @@
 
 namespace App\Cookie;
 
-
-use Constant;
-
 class Cookie extends CookieModel
 {
     public function __construct(string $name, string $content)
     {
-        $this->name = $name;
-        $this->content = $content;
+        parent::__construct($name, $content, 0);
     }
 
     /**

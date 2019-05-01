@@ -84,6 +84,8 @@ class Autowiring
                     $post = $request->post();
                     $arguments[] = $allowsNull ? $post : (!empty($post) ? $post : []);
                 }
+
+                continue;
             }
 
             $isBuiltin = $parameter->getType()->isBuiltin();

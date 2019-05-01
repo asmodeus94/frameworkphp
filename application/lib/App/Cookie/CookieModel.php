@@ -39,4 +39,11 @@ class CookieModel
      * @var bool
      */
     public $httpOnly = true;
+
+    public function __construct(string $name, string $content, int $expire)
+    {
+        $this->name = $name;
+        $this->content = $content;
+        $this->expire = $expire;
+    }
 }

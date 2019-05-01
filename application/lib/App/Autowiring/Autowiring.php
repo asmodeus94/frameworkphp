@@ -70,8 +70,13 @@ class Autowiring
         $arguments = [];
         $request = Request::getInstance();
         foreach ($reflectionParameters as $parameter) {
+            if (($type = $parameter->getType()) === null) {
+                $arguments[] = null;
+                continue;
+            }
+
+            $type = $type->getName();
             $name = strtolower($parameter->getName());
-            $type = $parameter->getType()->getName();
             if (in_array($name, ['get', 'post']) && $type === 'array') {
                 $allowsNull = $parameter->getType()->allowsNull();
 

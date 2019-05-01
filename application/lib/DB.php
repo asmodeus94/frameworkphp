@@ -2,6 +2,7 @@
 
 use App\Autowiring\AutowiringFactoryInterface;
 use Doctrine\DBAL\DBALException;
+use Doctrine\DBAL\Driver\PDOConnection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ConnectionException;
@@ -22,24 +23,57 @@ class DB implements AutowiringFactoryInterface
 
     private function __construct()
     {
-        $connectionParams = require CONFIG . 'dbConfig.php';
-
-        try {
-            $this->connection = DriverManager::getConnection($connectionParams);
-        } catch (DBALException $e) {
-        }
-    }
-
-    public static function getInstance(): AutowiringFactoryInterface
-    {
-        if (!isset(self::$instance)) {
-            self::$instance = new DB();
-        }
-
-        return self::$instance;
+        $this->connection = $this->createNewConnection();
     }
 
     /**
+     * Pobiera dane konfiguracyjne bazy danych i otwiera połączenie z bazą
+     *
+     * @return Connection|null
+     */
+    private function createNewConnection(): ?Connection
+    {
+        $connectionParams = require CONFIG . 'dbConfig.php';
+
+        try {
+            return DriverManager::getConnection($connectionParams);
+        } catch (DBALException $e) {
+            // todo: logger dla klasy db
+        }
+
+        return null;
+    }
+
+    /**
+     * Zwraca instancję DB
+     *
+     * @param string|null $id
+     *
+     * @return DB
+     */
+    public static function getInstance(?string $id = null): AutowiringFactoryInterface
+    {
+        $id = md5((string)$id);
+        if (!isset(self::$instance[$id])) {
+            self::$instance[$id] = new DB();
+        }
+
+        return self::$instance[$id];
+    }
+
+    /**
+     * Zwraca nową instancję DB z nowym połączeniem z bazą
+     *
+     * @return DB
+     */
+    public static function getAnotherInstance(): DB
+    {
+        return self::getInstance(uniqid());
+    }
+
+    /**
+     * Wykrywa na potrzeby bindowania typ przekazanej zmiennej
+     *
      * @param mixed $parameter
      *
      * @return int
@@ -56,6 +90,8 @@ class DB implements AutowiringFactoryInterface
     }
 
     /**
+     * Binduje przekazane wartości z zapytaniem
+     *
      * @param DriverStatement $stmt
      * @param array|null      $parameters
      */
@@ -65,7 +101,7 @@ class DB implements AutowiringFactoryInterface
             return;
         }
 
-        $numericKeys = is_numeric(array_keys($parameters)[0]);
+        $numericKeys = is_int(array_keys($parameters)[0]);
 
         foreach ($parameters as $key => $parameter) {
             $key = !$numericKeys ? ':' . $key : $key + 1;
@@ -74,6 +110,9 @@ class DB implements AutowiringFactoryInterface
     }
 
     /**
+     * Podmienia w zapytaniu "*" na znaki "?" rozdzielone przecinkami w liczbie zgodnej z liczbą parametrów, których one
+     * dotyczą oraz modyfikuje parametry poprzez wypakowanie parametrów i utworzenie jednowymiarowej tablicy
+     *
      * @param string $query
      * @param array  $parameters
      *
@@ -96,6 +135,8 @@ class DB implements AutowiringFactoryInterface
     }
 
     /**
+     * Tworzy zapytanie poprzez zbindowanie z nim parametrów
+     *
      * @param string     $query
      * @param array|null $parameters
      *
@@ -115,30 +156,20 @@ class DB implements AutowiringFactoryInterface
     }
 
     /**
-     * @param string     $query
-     * @param array|null $parameters
+     * Tworzy znaki zapytania na potrzeby bindowania parametrów
      *
-     * @return bool
-     * @throws DBALException
-     */
-    private function execute(string $query, ?array $parameters): bool
-    {
-        $stmt = $this->makeStatement($query, $parameters);
-
-        return $stmt->execute();
-    }
-
-    /**
      * @param int $number
      *
      * @return string
      */
-    public static function makeQuestionMarks(int $number): string
+    private static function makeQuestionMarks(int $number): string
     {
         return str_repeat('?,', $number - 1) . '?';
     }
 
     /**
+     * Wywołuje zapytanie
+     *
      * @param string     $query
      * @param array|null $parameters
      *
@@ -147,32 +178,16 @@ class DB implements AutowiringFactoryInterface
      */
     public function query(string $query, ?array $parameters = null): bool
     {
-        return $this->execute($query, $parameters);
+        return $this->makeStatement($query, $parameters)->execute();
     }
 
     /**
-     * @param string     $query
-     * @param array|null $parameters
+     * Pobiera pojedynczą wartość
      *
-     * @return mixed[]|false
-     * @throws DBALException
-     */
-    public function getRows(string $query, ?array $parameters = null)
-    {
-        $stmt = $this->makeStatement($query, $parameters);
-
-        if (!$stmt->execute()) {
-            return false;
-        }
-
-        return $stmt->fetchAll();
-    }
-
-    /**
      * @param string $query
      * @param array  $parameters
      *
-     * @return false|mixed
+     * @return mixed|false
      * @throws DBALException
      */
     public function getValue(string $query, ?array $parameters = null)
@@ -187,10 +202,12 @@ class DB implements AutowiringFactoryInterface
     }
 
     /**
+     * Pobiera cały wiersz
+     *
      * @param string     $query
      * @param array|null $parameters
      *
-     * @return mixed
+     * @return mixed|false
      * @throws DBALException
      */
     public function getRow(string $query, ?array $parameters = null)
@@ -205,6 +222,75 @@ class DB implements AutowiringFactoryInterface
     }
 
     /**
+     * Pobiera na raz wszystkie rekordy
+     *
+     * @param string     $query
+     * @param array|null $parameters
+     *
+     * @return array|false
+     * @throws DBALException
+     */
+    public function getRows(string $query, ?array $parameters = null)
+    {
+        $stmt = $this->makeStatement($query, $parameters);
+
+        if (!$stmt->execute()) {
+            return false;
+        }
+
+        return !empty($rows = $stmt->fetchAll()) ? $rows : false;
+    }
+
+    /**
+     * @param string     $key
+     * @param string     $query
+     * @param array|null $parameters
+     *
+     * @return array|bool
+     * @throws DBALException
+     */
+    public function getRowsByKey(string $key, string $query, ?array $parameters = null)
+    {
+        $rows = $this->getRows($query, $parameters);
+
+        if (!$rows) {
+            return false;
+        }
+
+        $keysAreUnique = count(array_unique(array_column($rows, $key))) === count($rows);
+
+        $newRows = [];
+
+        foreach ($rows as $index => $data) {
+            if (!isset($data[$key])) {
+                return false;
+            }
+
+            $rowKey = $data[$key];
+            if (!isset($newRows[$rowKey])) {
+                if ($keysAreUnique) {
+                    $newRows[$rowKey] = $data;
+                } else {
+                    $newRows[$rowKey][] = $data;
+                }
+            } else {
+                if (array_keys($newRows[$rowKey])[0] !== 0) {
+                    $tmp = $newRows[$rowKey];
+                    unset($newRows[$rowKey]);
+                    $newRows[$rowKey][] = $tmp;
+                }
+                $newRows[$rowKey][] = $data;
+            }
+
+            unset($rows[$index]);
+        }
+
+        return $newRows;
+    }
+
+    /**
+     * Pobiera całą kolumnę
+     *
      * @param string     $query
      * @param array|null $parameters
      *
@@ -223,7 +309,72 @@ class DB implements AutowiringFactoryInterface
     }
 
     /**
+     * Włącza lub wyłącza buforowanie zapytań
      *
+     * Uwaga! Przy wyłączonym buforowaniu można jednocześnie na danym połączeniu wykonać tylko jedno zapytanie
+     *
+     * @param bool $toggle
+     *
+     * @see DB::getAnotherInstance()
+     */
+    public function bufferedQuery(bool $toggle): void
+    {
+        /** @var PDOConnection $wrappedConnection */
+        $wrappedConnection = $this->connection->getWrappedConnection();
+
+        $isBuffered = $wrappedConnection->getAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY);
+
+        if ($isBuffered === $toggle) {
+            return;
+        }
+
+        if ($this->connection->isConnected()) {
+            $this->connection->close();
+        }
+
+        /** @var PDOConnection $wrappedConnection */
+        $wrappedConnection = $this->connection->getWrappedConnection();
+        $wrappedConnection->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, $toggle);
+        $this->connection->connect();
+    }
+
+    /**
+     * Pobiera wszystkie rekordy jeden po drugim
+     *
+     * @param string     $query
+     * @param array|null $parameters
+     *
+     * @return Generator
+     * @throws DBALException
+     *
+     * @see DB::bufferedQuery()
+     */
+    public function getOneByOne(string $query, ?array $parameters = null)
+    {
+        $stmt = $this->makeStatement($query, $parameters);
+
+        if (!$stmt->execute()) {
+            return;
+        }
+
+        while ($row = $stmt->fetch()) {
+            yield $row;
+        }
+    }
+
+    /**
+     * Zwraca identyfikator ostatnio dodanego rekordu w przypadku gdy tabela ma kolumnę z AUTO_INCREMENT, w przeciwnym
+     * razie zwraca '0'
+     *
+     * @return string
+     */
+    public function lastInsertId(): string
+    {
+        return $this->connection->lastInsertId();
+    }
+
+    /**
+     * Rozpoczyna transakcję
      */
     public function beginTransaction(): void
     {
@@ -231,6 +382,8 @@ class DB implements AutowiringFactoryInterface
     }
 
     /**
+     * Zatwierdza transakcję
+     *
      * @throws ConnectionException
      */
     public function commit(): void
@@ -239,6 +392,8 @@ class DB implements AutowiringFactoryInterface
     }
 
     /**
+     * Wycofuje transakcję
+     *
      * @throws ConnectionException
      */
     public function rollBack(): void
@@ -247,6 +402,8 @@ class DB implements AutowiringFactoryInterface
     }
 
     /**
+     * Sprawdza, czy na danym połączeniu jest otwarta transakcja
+     *
      * @return bool
      */
     public function inTransaction(): bool

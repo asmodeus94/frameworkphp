@@ -29,7 +29,7 @@ class Route
      */
     private const PREDEFINED_PATTERNS_MAP = [
         'multiParams' => '(?:[\/][a-z0-9_-]*)*',
-        'slug' => '(?:[a-z][a-z0-9]*(?:-[a-z0-9]+)+)+',
+        'slug' => '(?:[a-z0-9]*(?:-[a-z0-9]+)*)+',
         'number' => '[1-9][0-9]*',
         'word' => '[a-zA-Z]+',
     ];

@@ -9,7 +9,7 @@ return [
         'method' => \App\Route::DEFAULT_METHOD
     ],
     'test2' => [
-        'path' => 'dashboard/test2[/n/{n:number}]',
+        'path' => 'dashboard/test2[/{book:slug}][/page/{n:number}]',
         'class' => \Dashboard\DashboardController::class,
         'method' => 'test'
     ],

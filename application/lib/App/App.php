@@ -91,10 +91,17 @@ class App
                     $controller = empty($constructorArguments) ? new $class()
                         : call_user_func_array([new \ReflectionClass($class), 'newInstance'], $constructorArguments);
 
-                    call_user_func_array([$controller, $method], $methodArguments);
+                    if (!empty($methodArguments)) {
+                        call_user_func_array([$controller, $method], $methodArguments);
+                    } else {
+                        $controller->{$method}();
+                    }
+
                     $responseCode = 200;
                 }
             } catch (\Exception $ex) {
+                // todo: Dodać logowanie błędów (monolog)
+                var_dump($ex);
                 $responseCode = 500;
             }
         }

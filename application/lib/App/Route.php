@@ -82,14 +82,6 @@ class Route
     }
 
     /**
-     * @return array
-     */
-    public function getRules(): array
-    {
-        return $this->rules;
-    }
-
-    /**
      * Na podstawie reguły routingu (jej ścieżki) tworzy wyr. regularne umożliwiające podanej przez użytkownika ścieżki
      *
      * @param string $path
@@ -99,12 +91,12 @@ class Route
     private function prepareRegexp(string $path): ?string
     {
         $path = str_replace('/', '\/', $path);
-        preg_match_all('/(?:(?:\[\[.*?)?{{[a-zA-Z]+(?::[a-zA-Z]+)?}}(?:\/?\]\])?)/', $path, $pathGroup);
+        preg_match_all('/(?:(?:\[.*?)?{[a-zA-Z]+(?::[a-zA-Z]+)?}(?:\/?\])?)/', $path, $pathGroup);
 
         $regexp = $path;
         $pathGroup = $pathGroupCopy = $pathGroup[0];
         foreach ($pathGroup as &$group) {
-            if (!preg_match('/{{([a-zA-Z]+)(?::([a-zA-Z]+))?}}/', $group, $groupAnalyzed)) {
+            if (!preg_match('/{([a-zA-Z]+)(?::([a-zA-Z]+))?}/', $group, $groupAnalyzed)) {
                 continue;
             }
 
@@ -123,7 +115,7 @@ class Route
 
             $group = str_replace($groupAnalyzed[0], $pattern, $group);
 
-            if (preg_match('/^\[\[(.*)\]\]$/', $group, $optionalPattern)) {
+            if (preg_match('/^\[(.*)\]$/', $group, $optionalPattern)) {
                 $group = str_replace($optionalPattern[0], '(?:' . $optionalPattern[1] . ')?', $group);
             }
         }

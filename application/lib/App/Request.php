@@ -13,9 +13,9 @@ class Request
     private static $instance;
 
     /**
-     * @var string
+     * @var string|null
      */
-    private $requestMethod;
+    private $requestMethod = null;
 
     /**
      * @var string|null
@@ -37,9 +37,13 @@ class Request
      */
     private $post = null;
 
+    const ALLOWED_HTTP_METHODS = ['GET', 'POST'];
+
 
     private function __construct()
     {
+        $requestMethod = strtoupper((string)$_SERVER['REQUEST_METHOD']);
+        $this->requestMethod = in_array($requestMethod, self::ALLOWED_HTTP_METHODS) ? $requestMethod : null;
         $this->collectData();
     }
 
@@ -56,18 +60,9 @@ class Request
     }
 
     /**
-     *
+     * Wypełnia tablice get i post parametrami
      */
     private function collectData(): void
-    {
-        $this->requestMethod = $_SERVER['REQUEST_METHOD'];
-        $this->initParams();
-    }
-
-    /**
-     *
-     */
-    private function initParams(): void
     {
         if ($this->requestMethod === 'POST' && !empty($_POST)) {
             $this->post = $_POST;
@@ -107,6 +102,14 @@ class Request
     public function appendGet(string $param, string $value): void
     {
         $this->get[$param] = $value;
+    }
+
+    /**
+     * @return string
+     */
+    public function getRequestMethod(): string
+    {
+        return $this->requestMethod;
     }
 
     /**

@@ -24,11 +24,13 @@ class Route
 
     const DEFAULT_METHOD = 'index';
 
+    const MULTI_PARAMS_PATTERN = 'multiParams';
+
     /**
      * Predefiniowane wyrażenia regularne
      */
     private const PREDEFINED_PATTERNS_MAP = [
-        'multiParams' => '(?:[\/][a-z0-9_-]*)*',
+        self::MULTI_PARAMS_PATTERN => '(?:[\/][a-z0-9_-]*)*',
         'slug' => '(?:[a-z0-9]*(?:-[a-z0-9]+)*)+',
         'number' => '[1-9][0-9]*',
         'word' => '[a-zA-Z]+',
@@ -90,8 +92,10 @@ class Route
      */
     private function prepareRegexp(string $path): ?string
     {
-        $path = str_replace('/', '\/', $path);
-        preg_match_all('/(?:(?:\[.*?)?{[a-zA-Z]+(?::[a-zA-Z]+)?}(?:\/?\])?)/', $path, $pathGroup);
+        $path = str_replace(['/', '-'], ['\/', '\-'], $path);
+        $path = preg_replace('/\[(.*?)\]/', '(?:$1)?', $path);
+
+        preg_match_all('/(?:{[a-zA-Z]+(?::[a-zA-Z]+)?})/', $path, $pathGroup);
 
         $regexp = $path;
         $pathGroup = $pathGroupCopy = $pathGroup[0];
@@ -101,8 +105,8 @@ class Route
             }
 
             $groupRegexp = null;
-            if ($groupAnalyzed[1] === 'multiParams') {
-                $groupRegexp = self::PREDEFINED_PATTERNS_MAP['multiParams'];
+            if ($groupAnalyzed[1] === self::MULTI_PARAMS_PATTERN) {
+                $groupRegexp = self::PREDEFINED_PATTERNS_MAP[self::MULTI_PARAMS_PATTERN];
             } elseif (isset($groupAnalyzed[2]) && isset(self::PREDEFINED_PATTERNS_MAP[$groupAnalyzed[2]])) {
                 $groupRegexp = self::PREDEFINED_PATTERNS_MAP[$groupAnalyzed[2]];
             }
@@ -112,12 +116,7 @@ class Route
             }
 
             $pattern = '(?<' . $groupAnalyzed[1] . '>' . $groupRegexp . ')';
-
             $group = str_replace($groupAnalyzed[0], $pattern, $group);
-
-            if (preg_match('/^\[(.*)\]$/', $group, $optionalPattern)) {
-                $group = str_replace($optionalPattern[0], '(?:' . $optionalPattern[1] . ')?', $group);
-            }
         }
 
         return '/^' . str_replace($pathGroupCopy, $pathGroup, $regexp) . '$/';
@@ -150,12 +149,17 @@ class Route
     private function analyzePath(): ?string
     {
         foreach ($this->rules as $routingRuleName => $routingRule) {
+            if (isset($routingRule['allowedHttpMethods']) && is_array($routingRule['allowedHttpMethods'])
+                && !in_array($this->request->getRequestMethod(), $routingRule['allowedHttpMethods'])) {
+                continue;
+            }
+
             $routingRule['path'] = is_array($routingRule['path']) ? $routingRule['path'] : [$routingRule['path']];
             foreach ($routingRule['path'] as $path) {
                 $regexp = $this->prepareRegexp($path);
                 if (preg_match($regexp, $this->request->getPath(), $matches)) {
-                    if (isset($matches['multiParams'])) {
-                        $multiParams = array_values(array_filter(explode('/', $matches['multiParams'])));
+                    if (isset($matches[self::MULTI_PARAMS_PATTERN])) {
+                        $multiParams = array_values(array_filter(explode('/', $matches[self::MULTI_PARAMS_PATTERN])));
                         $nOfEle = count($multiParams);
                         if ($nOfEle % 2 !== 0) {
                             unset($multiParams[--$nOfEle]);
@@ -165,7 +169,7 @@ class Route
                             $this->request->appendGet($multiParams[$index], $multiParams[$index + 1]);
                         }
 
-                        unset($matches['multiParams']);
+                        unset($matches[self::MULTI_PARAMS_PATTERN]);
                     }
 
                     foreach ($matches as $param => $value) {
@@ -194,7 +198,7 @@ class Route
         $class = $method = null;
         if (($routingRuleName = $this->analyzePath()) !== null) {
             $class = !empty($this->rules[$routingRuleName]['class']) ? $this->rules[$routingRuleName]['class'] : null;
-            $method = !empty($this->rules[$routingRuleName]['method']) ? $this->rules[$routingRuleName]['method'] : null;
+            $method = !empty($this->rules[$routingRuleName]['method']) ? $this->rules[$routingRuleName]['method'] : self::DEFAULT_METHOD;
         }
 
         return [$class, $method];

@@ -21,6 +21,8 @@ class DB implements AutowiringFactoryInterface
      */
     private $connection;
 
+    const MULTI_PARAMS_PLACEHOLDER = ':multiParams';
+
     private function __construct()
     {
         $this->connection = $this->createNewConnection();
@@ -84,6 +86,8 @@ class DB implements AutowiringFactoryInterface
             return ParameterType::NULL;
         } elseif (is_numeric($parameter) && intval($parameter) == $parameter) {
             return ParameterType::INTEGER;
+        } elseif (is_bool($parameter)) {
+            return ParameterType::BOOLEAN;
         } else {
             return ParameterType::STRING;
         }
@@ -110,15 +114,17 @@ class DB implements AutowiringFactoryInterface
     }
 
     /**
-     * Podmienia w zapytaniu "*" na znaki "?" rozdzielone przecinkami w liczbie zgodnej z liczbą parametrów, których one
-     * dotyczą oraz modyfikuje parametry poprzez wypakowanie parametrów i utworzenie jednowymiarowej tablicy
+     * Podmienia w zapytaniu ":multiParams" na znaki "?" rozdzielone przecinkami w liczbie zgodnej z liczbą parametrów,
+     * których one dotyczą oraz modyfikuje parametry poprzez wypakowanie parametrów i utworzenie jednowymiarowej
+     * tablicy
      *
      * @param string $query
      * @param array  $parameters
      *
      * @return array
+     * @see DB::MULTI_PARAMS_PLACEHOLDER
      */
-    private function replaceAsteriskWithQuestionMarks(string $query, array $parameters): array
+    private function replaceMultiParamsPlaceholderWithQuestionMarks(string $query, array $parameters): array
     {
         $newParameters = [];
         foreach ($parameters as $parameter) {
@@ -127,7 +133,12 @@ class DB implements AutowiringFactoryInterface
                 continue;
             }
 
-            $query = preg_replace('/\(\*\)/', '(' . self::makeQuestionMarks(count($parameter)) . ')', $query, 1);
+            $query = preg_replace(
+                '/\(' . self::MULTI_PARAMS_PLACEHOLDER . '\)/',
+                '(' . self::makeQuestionMarks(count($parameter)) . ')',
+                $query,
+                1
+            );
             $newParameters = array_merge($newParameters, $parameter);
         }
 
@@ -145,8 +156,8 @@ class DB implements AutowiringFactoryInterface
      */
     private function makeStatement(string $query, ?array $parameters): DriverStatement
     {
-        if (!empty($parameters) && preg_match_all('/\(\*\)/', $query, $matches)) {
-            list($query, $parameters) = $this->replaceAsteriskWithQuestionMarks($query, $parameters);
+        if (!empty($parameters) && preg_match_all('/\(' . self::MULTI_PARAMS_PLACEHOLDER . '\)/', $query, $matches)) {
+            list($query, $parameters) = $this->replaceMultiParamsPlaceholderWithQuestionMarks($query, $parameters);
         }
 
         $stmt = $this->connection->prepare($query);
@@ -156,7 +167,7 @@ class DB implements AutowiringFactoryInterface
     }
 
     /**
-     * Tworzy znaki zapytania na potrzeby bindowania parametrów
+     * Tworzy znaki zapytania rozdzielone przecinkami na potrzeby bindowania parametrów
      *
      * @param int $number
      *
@@ -165,6 +176,20 @@ class DB implements AutowiringFactoryInterface
     private static function makeQuestionMarks(int $number): string
     {
         return str_repeat('?,', $number - 1) . '?';
+    }
+
+    /**
+     * Tworzy placeholdery ":multiParams" w nawiasach rozdzielonych przecinkami na potrzeby tworzenia zapytań INSERT
+     * dodających wiele rekordów na raz
+     *
+     * @param int $number
+     *
+     * @return string
+     */
+    public static function makeMultiParamsInBrackets(int $number): string
+    {
+        $multiParams = '(' . self::MULTI_PARAMS_PLACEHOLDER . ')';
+        return str_repeat($multiParams . ',', $number - 1) . $multiParams;
     }
 
     /**

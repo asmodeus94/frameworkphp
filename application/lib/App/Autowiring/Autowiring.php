@@ -47,7 +47,8 @@ class Autowiring
         $reflection = new \ReflectionClass($class);
 
         if ($reflection->implementsInterface('App\Autowiring\AutowiringFactoryInterface')) {
-            self::$references[$class] = $class::getInstance();
+            /** @var AutowiringFactoryInterface $class */
+            self::$references[(string)$class] = $class::getInstance();
 
             return self::$references[$class];
         }

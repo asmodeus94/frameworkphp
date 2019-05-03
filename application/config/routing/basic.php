@@ -6,11 +6,13 @@ return [
             ''
         ],
         'class' => \Dashboard\DashboardController::class,
-        'method' => \App\Route::DEFAULT_METHOD
+        'method' => \App\Route::DEFAULT_METHOD,
+        'allowedHttpMethods' => ['POST', 'GET']
     ],
     'test2' => [
-        'path' => 'dashboard/test2[/{book:slug}][/page/{n:number}]',
+        'path' => 'dashboard/{str}[-d][/{book:slug}][/page/{n:number}]',
         'class' => \Dashboard\DashboardController::class,
-        'method' => 'test'
+        'method' => 'test',
+        'allowedHttpMethods' => ['GET']
     ],
 ];

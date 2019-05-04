@@ -22,7 +22,7 @@ class DashboardController extends ControllerAbstract
         echo 'index';
     }
 
-    public function test(array $get)
+    public function test()
     {
         echo 'test';
     }

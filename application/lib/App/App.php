@@ -86,6 +86,8 @@ class App
             try {
                 if ($this->isCallable($class, $method)) {
                     $autowiring = new Autowiring($class, $method);
+                    $autowiring->setRoute($this->route);
+
                     list($constructorArguments, $methodArguments) = $autowiring->analyzeController();
 
                     $controller = empty($constructorArguments) ? new $class()

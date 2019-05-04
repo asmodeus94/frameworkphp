@@ -135,4 +135,22 @@ class Request
     {
         return $this->post;
     }
+
+    /**
+     * @param string $name
+     *
+     * @return mixed
+     */
+    public function getParameter(string $name)
+    {
+        if (isset($this->get[$name])) {
+            return $this->get[$name];
+        }
+
+        if (isset($this->post[$name])) {
+            return $this->post[$name];
+        }
+
+        return null;
+    }
 }

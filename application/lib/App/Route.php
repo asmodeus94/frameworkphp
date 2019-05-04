@@ -31,7 +31,7 @@ class Route
      */
     private const PREDEFINED_PATTERNS_MAP = [
         self::MULTI_PARAMS_PATTERN => '(?:[\/][a-z0-9_-]*)*',
-        'slug' => '(?:[a-z0-9]*(?:-[a-z0-9]+)*)+',
+        'slug' => '(?:[a-z0-9]*(?:-[a-z0-9]+)*?)+',
         'number' => '[1-9][0-9]*',
         'word' => '[a-zA-Z]+',
     ];
@@ -61,6 +61,14 @@ class Route
         $this->request = $request;
 
         return $this;
+    }
+
+    /**
+     * @return Request
+     */
+    public function getRequest(): Request
+    {
+        return $this->request;
     }
 
     /**

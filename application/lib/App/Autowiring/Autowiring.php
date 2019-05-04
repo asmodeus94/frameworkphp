@@ -3,10 +3,16 @@
 namespace App\Autowiring;
 
 
-use App\Request;
+use App\Helper\Type;
+use App\Route;
 
 class Autowiring
 {
+    /**
+     * @var Route
+     */
+    private $route;
+
     /**
      * @var string
      */
@@ -29,6 +35,20 @@ class Autowiring
     }
 
     /**
+     * @param Route $route
+     *
+     * @return $this
+     */
+    public function setRoute(Route $route): Autowiring
+    {
+        $this->route = $route;
+
+        return $this;
+    }
+
+    /**
+     * Tworzy obiekt podanej klasy implementującej interfejs fabryki obiektów
+     *
      * @param string $class
      *
      * @return AutowiringFactoryInterface|null
@@ -57,19 +77,79 @@ class Autowiring
     }
 
     /**
+     * Sprawdza czy podana zmienna odpowiada tablicy get lub post
+     *
+     * @param string $name       Nazwa zmiennej
+     * @param string $type       Typ zmiennej
+     * @param bool   $allowsNull Czy może być null
+     *
+     * @return array|null|false
+     */
+    private function isGetOrPost(string $name, string $type, bool $allowsNull)
+    {
+        $name = strtolower($name);
+        if (in_array($name, ['get', 'post']) && $type === 'array') {
+            if ($name === 'get') {
+                $get = $this->route->getRequest()->get();
+                return $allowsNull ? $get : (!empty($get) ? $get : []);
+            }
+
+            if ($name === 'post') {
+                $post = $this->route->getRequest()->post();
+                return $allowsNull ? $post : (!empty($post) ? $post : []);
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Analizuje parametr typu wbudowanego szukając parametru o takiej samej nazwie w tablicach get oraz post
+     *
+     * @param \ReflectionParameter $parameter
+     *
+     * @return mixed
+     */
+    private function analyzeBuiltinParameter(\ReflectionParameter $parameter)
+    {
+        $type = $parameter->getType();
+        $name = $parameter->getName();
+        $allowsNull = $parameter->getType()->allowsNull();
+        if (($getOrPost = $this->isGetOrPost($name, $type, $allowsNull)) !== false) {
+            return $getOrPost;
+        }
+
+        if (($parameterFromRequest = $this->route->getRequest()->getParameter($name)) !== null) {
+            if ($type !== gettype($parameterFromRequest)) {
+                $parameterFromRequest = Type::cast($parameterFromRequest, $type);
+            }
+
+            return $parameterFromRequest;
+        }
+
+        if ($allowsNull) {
+            return null;
+        }
+
+        return false;
+    }
+
+    /**
+     * Analizuje przekazane parametry
+     *
      * @param \ReflectionParameter[] $reflectionParameters
+     * @param bool                   $forMethod Analiza dla metod (true) poszerzona o typy wbudowane
      *
      * @return array
      * @throws \ReflectionException
      */
-    private function analyzeParameters(array $reflectionParameters): array
+    private function analyzeParameters(array $reflectionParameters, bool $forMethod = false): array
     {
         if (empty($reflectionParameters)) {
             return [];
         }
 
         $arguments = [];
-        $request = Request::getInstance();
         foreach ($reflectionParameters as $parameter) {
             if (($type = $parameter->getType()) === null) {
                 $arguments[] = null;
@@ -77,24 +157,16 @@ class Autowiring
             }
 
             $type = $type->getName();
-            $name = strtolower($parameter->getName());
-            if (in_array($name, ['get', 'post']) && $type === 'array') {
-                $allowsNull = $parameter->getType()->allowsNull();
+            $isBuiltin = $parameter->getType()->isBuiltin();
 
-                if ($name === 'get') {
-                    $get = $request->get();
-                    $arguments[] = $allowsNull ? $get : (!empty($get) ? $get : []);
-                }
-
-                if ($name === 'post') {
-                    $post = $request->post();
-                    $arguments[] = $allowsNull ? $post : (!empty($post) ? $post : []);
+            if ($forMethod && $isBuiltin) {
+                if (($builtinParameter = $this->analyzeBuiltinParameter($parameter)) !== false) {
+                    $arguments[] = $builtinParameter;
                 }
 
                 continue;
             }
 
-            $isBuiltin = $parameter->getType()->isBuiltin();
             if (!$isBuiltin && ($instance = $this->makeInstanceOf($type)) !== null) {
                 $arguments[] = $instance;
             }
@@ -104,6 +176,9 @@ class Autowiring
     }
 
     /**
+     * Analizuje parametry konstruktora
+     *
+     * @return array
      * @throws \ReflectionException
      */
     private function analyzeConstructor(): array
@@ -120,6 +195,8 @@ class Autowiring
     }
 
     /**
+     * Analizuje parametry metody
+     *
      * @return array
      * @throws \ReflectionException
      */
@@ -127,10 +204,12 @@ class Autowiring
     {
         $reflection = new \ReflectionMethod($this->class, $this->method);
 
-        return $this->analyzeParameters($reflection->getParameters());
+        return $this->analyzeParameters($reflection->getParameters(), true);
     }
 
     /**
+     * Uruchamia analizę konstruktora oraz metody
+     *
      * @return array
      * @throws \ReflectionException
      */

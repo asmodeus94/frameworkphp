@@ -109,6 +109,7 @@ class Autowiring
      * @param \ReflectionParameter $parameter
      *
      * @return mixed
+     * @throws \ReflectionException
      */
     private function analyzeBuiltinParameter(\ReflectionParameter $parameter)
     {
@@ -127,11 +128,11 @@ class Autowiring
             return $parameterFromRequest;
         }
 
-        if ($allowsNull) {
-            return null;
+        if ($parameter->isDefaultValueAvailable()) {
+            return $parameter->getDefaultValue();
         }
 
-        return false;
+        return null;
     }
 
     /**
@@ -160,9 +161,7 @@ class Autowiring
             $isBuiltin = $parameter->getType()->isBuiltin();
 
             if ($forMethod && $isBuiltin) {
-                if (($builtinParameter = $this->analyzeBuiltinParameter($parameter)) !== false) {
-                    $arguments[] = $builtinParameter;
-                }
+                $arguments[] = $this->analyzeBuiltinParameter($parameter);
 
                 continue;
             }

@@ -105,6 +105,9 @@ class App
                 // todo: Dodać logowanie błędów (monolog)
                 var_dump($ex);
                 $responseCode = 500;
+            } catch (\Error $er) {
+                var_dump($er);
+                $responseCode = 500;
             }
         }
 

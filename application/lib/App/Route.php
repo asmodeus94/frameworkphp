@@ -32,7 +32,7 @@ class Route
     private const PREDEFINED_PATTERNS_MAP = [
         self::MULTI_PARAMS_PATTERN => '(?:[\/][a-z0-9_-]*)*',
         'slug' => '(?:[a-z0-9]*(?:-[a-z0-9]+)*?)+',
-        'number' => '[1-9][0-9]*',
+        'number' => '[0-9]+',
         'word' => '[a-zA-Z]+',
     ];
 
@@ -103,12 +103,12 @@ class Route
         $path = str_replace(['/', '-'], ['\/', '\-'], $path);
         $path = preg_replace('/\[(.*?)\]/', '(?:$1)?', $path);
 
-        preg_match_all('/(?:{[a-zA-Z]+(?::[a-zA-Z]+)?})/', $path, $pathGroup);
+        preg_match_all('/(?:{[a-zA-Z\-_]+(?::[a-zA-Z]+)?})/', $path, $pathGroup);
 
         $regexp = $path;
         $pathGroup = $pathGroupCopy = $pathGroup[0];
         foreach ($pathGroup as &$group) {
-            if (!preg_match('/{([a-zA-Z]+)(?::([a-zA-Z]+))?}/', $group, $groupAnalyzed)) {
+            if (!preg_match('/{([a-zA-Z\-_]+)(?::([a-zA-Z]+))?}/', $group, $groupAnalyzed)) {
                 continue;
             }
 

@@ -10,19 +10,11 @@ class Cookie extends CookieModel
     }
 
     /**
-     *
+     * Usuwa ciastko
      */
     public function remove(): void
     {
         setcookie($this->name, '', 1);
-    }
-
-    /**
-     * @return string
-     */
-    public function __toString(): string
-    {
-        return $this->content;
     }
 
     /**
@@ -43,5 +35,13 @@ class Cookie extends CookieModel
             $cookieModel->secure,
             $cookieModel->httpOnly
         );
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString(): string
+    {
+        return $this->content;
     }
 }

@@ -7,7 +7,7 @@ use App\Response\Json;
 use App\Response\AbstractResponse;
 use App\Response\View;
 
-abstract class Controller
+class Controller
 {
     /**
      * @param array|View $response

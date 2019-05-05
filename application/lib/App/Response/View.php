@@ -26,7 +26,7 @@ class View extends AbstractResponse
 
     private const BASE_LAYOUT = 'base.twig';
 
-    public function __construct(string $layout = null, array $variables = [])
+    public function __construct(?string $layout = null, array $variables = [])
     {
         $loader = new FilesystemLoader(TWIG_TEMPLATES);
         $this->twig = new Environment($loader);

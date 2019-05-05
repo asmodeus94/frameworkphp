@@ -5,6 +5,6 @@ define('LIB', APP . 'lib' . DIRECTORY_SEPARATOR);
 define('VENDOR', APP . 'vendor' . DIRECTORY_SEPARATOR);
 
 require VENDOR . 'autoload.php';
-require APP . 'autoloader.php';
+require APP . 'autoload.php';
 
 (new \App\App())->run();

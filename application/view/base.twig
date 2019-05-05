@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>{% block title %}{{ title|default('Default title') }}{% endblock %}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="icon" href="{{ asset('favicon/fav.png') }}" type="image/x-icon" />
+    {% block javascript_head %}{% endblock %}
+    {% block stylesheets %}{% endblock %}
+</head>
+
+<body>
+{% block javascript_body_top %}{% endblock %}
+{% block body %}{% endblock %}
+{% block javascript_body_bottom %}{% endblock %}
+</body>
+</html>

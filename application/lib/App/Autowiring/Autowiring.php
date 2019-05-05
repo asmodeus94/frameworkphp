@@ -3,6 +3,7 @@
 namespace App\Autowiring;
 
 
+use App\Cookie\Cookie;
 use App\Helper\Type;
 use App\Route;
 
@@ -79,15 +80,15 @@ class Autowiring
     /**
      * Sprawdza czy podana zmienna odpowiada tablicy get lub post
      *
-     * @param string $name       Nazwa zmiennej
-     * @param string $type       Typ zmiennej
-     * @param bool   $allowsNull Czy może być null
+     * @param \ReflectionParameter $parameter
      *
      * @return array|null|false
      */
-    private function isGetOrPost(string $name, string $type, bool $allowsNull)
+    private function isGetOrPost(\ReflectionParameter $parameter)
     {
-        $name = strtolower($name);
+        $type = $parameter->getType()->getName();
+        $allowsNull = $parameter->getType()->allowsNull();
+        $name = strtolower($parameter->getName());
         if (in_array($name, ['get', 'post']) && $type === 'array') {
             if ($name === 'get') {
                 $get = $this->route->getRequest()->get();
@@ -104,6 +105,32 @@ class Autowiring
     }
 
     /**
+     * Sprawdza czy podana zmienna odpowiada ciastku/ciastkom
+     *
+     * @param \ReflectionParameter $parameter
+     *
+     * @return array|Cookie|null|false
+     */
+    private function areCookies(\ReflectionParameter $parameter)
+    {
+        $type = $parameter->getType()->getName();
+        $allowsNull = $parameter->getType()->allowsNull();
+        $name = $parameter->getName();
+        if (in_array($type, ['array', Cookie::class])) {
+            $cookies = $this->route->getRequest()->cookies();
+            if (in_array(strtolower($name), ['cookie', 'cookies']) && $type === 'array') {
+                return $allowsNull ? $cookies : (!empty($cookies) ? $cookies : []);
+            }
+
+            if ($type === Cookie::class && ($allowsNull || isset($cookies[$name]))) {
+                return isset($cookies[$name]) ? $cookies[$name] : null;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Analizuje parametr typu wbudowanego szukając parametru o takiej samej nazwie w tablicach get oraz post
      *
      * @param \ReflectionParameter $parameter
@@ -113,10 +140,9 @@ class Autowiring
      */
     private function analyzeBuiltinParameter(\ReflectionParameter $parameter)
     {
-        $type = $parameter->getType();
+        $type = $parameter->getType()->getName();
         $name = $parameter->getName();
-        $allowsNull = $parameter->getType()->allowsNull();
-        if (($getOrPost = $this->isGetOrPost($name, $type, $allowsNull)) !== false) {
+        if (($getOrPost = $this->isGetOrPost($parameter)) !== false) {
             return $getOrPost;
         }
 
@@ -160,6 +186,12 @@ class Autowiring
             $type = $type->getName();
             $isBuiltin = $parameter->getType()->isBuiltin();
 
+            if (($cookies = $this->areCookies($parameter)) !== false) {
+                $arguments[] = $cookies;
+
+                continue;
+            }
+
             if ($forMethod && $isBuiltin) {
                 $arguments[] = $this->analyzeBuiltinParameter($parameter);
 
@@ -168,6 +200,8 @@ class Autowiring
 
             if (!$isBuiltin && ($instance = $this->makeInstanceOf($type)) !== null) {
                 $arguments[] = $instance;
+            } else {
+                $arguments[] = null;
             }
         }
 

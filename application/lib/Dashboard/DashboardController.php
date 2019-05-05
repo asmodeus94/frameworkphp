@@ -3,9 +3,10 @@
 namespace Dashboard;
 
 
-use App\ControllerAbstract;
+use App\Controller;
+use App\Response\View;
 
-class DashboardController extends ControllerAbstract
+class DashboardController extends Controller
 {
     /**
      * @var \DB
@@ -19,11 +20,11 @@ class DashboardController extends ControllerAbstract
 
     public function index()
     {
-        echo 'index';
+        return $this->redirect('/dashboard/smthing');
     }
 
-    public function test()
+    public function test(string $title, array $get, ?array $cookies)
     {
-        echo 'test';
+        return $this->response(new View('dashboard/test.twig', ['title' => 'd']));
     }
 }

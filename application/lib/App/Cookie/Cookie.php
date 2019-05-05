@@ -11,10 +11,13 @@ class Cookie extends CookieModel
 
     /**
      * Usuwa ciastko
+     *
+     * @param string $path
+     * @param string $domain
      */
-    public function remove(): void
+    public function remove(string $path = '/', string $domain = ''): void
     {
-        setcookie($this->name, '', 1);
+        setcookie($this->name, '', 1, $path, $domain);
     }
 
     /**
@@ -30,10 +33,10 @@ class Cookie extends CookieModel
             $cookieModel->name,
             $cookieModel->content,
             $cookieModel->expire,
-            $cookieModel->path,
-            $cookieModel->domain,
-            $cookieModel->secure,
-            $cookieModel->httpOnly
+            $cookieModel->path ?? '/',
+            $cookieModel->domain ?? '',
+            $cookieModel->secure ?? true,
+            $cookieModel->httpOnly ?? true
         );
     }
 

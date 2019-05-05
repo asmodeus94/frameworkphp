@@ -4,6 +4,7 @@ namespace App;
 
 
 use App\Autowiring\Autowiring;
+use App\Response\AbstractResponse;
 
 class App
 {
@@ -27,7 +28,7 @@ class App
         define('CACHE', APP . 'cache' . DIRECTORY_SEPARATOR);
         define('ROUTING', CONFIG . 'routing' . DIRECTORY_SEPARATOR);
 
-        define('TWIG_CACHE', CACHE . 'twig' . DIRECTORY_SEPARATOR);
+        define('TWIG_TEMPLATES', APP . 'view' . DIRECTORY_SEPARATOR);
     }
 
     /**
@@ -62,13 +63,46 @@ class App
     {
         $reflection = new \ReflectionClass($controller);
         if ($reflection->isAbstract() || !$reflection->getConstructor()->isPublic()
-            || !$reflection->isSubclassOf('App\ControllerAbstract') || !$reflection->hasMethod($method)) {
+            || !$reflection->isSubclassOf('App\Controller') || !$reflection->hasMethod($method)) {
             return false;
         }
 
         $reflection = new \ReflectionMethod($controller, $method);
 
         return $reflection->isPublic() && !$reflection->isStatic();
+    }
+
+    /**
+     * @param string $class
+     * @param string $method
+     * @param array  $arguments
+     *
+     * @throws \Exception|\Error|\ReflectionException
+     */
+    private function callController(string $class, string $method, array $arguments)
+    {
+        list($constructorArguments, $methodArguments) = $arguments;
+
+        $controller = empty($constructorArguments) ? new $class()
+            : call_user_func_array([new \ReflectionClass($class), 'newInstance'], $constructorArguments);
+
+        if (!empty($methodArguments)) {
+            $response = call_user_func_array([$controller, $method], $methodArguments);
+        } else {
+            $response = $controller->{$method}();
+        }
+
+        if (!($response instanceof AbstractResponse) && !($response instanceof Redirect)) {
+            throw new \Exception('Response is not an instance of AbstractResponse/Redirect class');
+        }
+
+        if ($response instanceof AbstractResponse) {
+            echo $response->send();
+        }
+
+        if ($response instanceof Redirect) {
+            $response->make();
+        }
     }
 
     /**
@@ -80,6 +114,7 @@ class App
         $this->route->setRequest(Request::getInstance());
 
         list($class, $method) = $this->route->run();
+        $hasResponse = false;
         $responseCode = null;
 
         if ($class !== null) {
@@ -88,18 +123,9 @@ class App
                     $autowiring = new Autowiring($class, $method);
                     $autowiring->setRoute($this->route);
 
-                    list($constructorArguments, $methodArguments) = $autowiring->analyzeController();
-
-                    $controller = empty($constructorArguments) ? new $class()
-                        : call_user_func_array([new \ReflectionClass($class), 'newInstance'], $constructorArguments);
-
-                    if (!empty($methodArguments)) {
-                        call_user_func_array([$controller, $method], $methodArguments);
-                    } else {
-                        $controller->{$method}();
-                    }
-
-                    $responseCode = 200;
+                    $arguments = $autowiring->analyzeController();
+                    $this->callController($class, $method, $arguments);
+                    $hasResponse = true;
                 }
             } catch (\Exception $ex) {
                 // todo: Dodać logowanie błędów (monolog)
@@ -111,10 +137,12 @@ class App
             }
         }
 
-        if (!isset($responseCode)) {
-            $responseCode = 404;
-        }
+        if (!$hasResponse) {
+            if ($responseCode === null) {
+                $responseCode = 404;
+            }
 
-        http_response_code($responseCode);
+            http_response_code($responseCode);
+        }
     }
 }

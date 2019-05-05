@@ -2,6 +2,7 @@
     "require": {
         "twig/twig": "^2.0",
         "ext-pdo": "*",
-        "doctrine/dbal": "^2.9"
+        "doctrine/dbal": "^2.9",
+        "ext-json": "*"
     }
 }

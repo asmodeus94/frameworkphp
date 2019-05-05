@@ -137,6 +137,14 @@ class Request
     }
 
     /**
+     * @return Cookie[]|null
+     */
+    public function cookies(): ?array
+    {
+        return $this->cookies;
+    }
+
+    /**
      * @param string $name
      *
      * @return mixed

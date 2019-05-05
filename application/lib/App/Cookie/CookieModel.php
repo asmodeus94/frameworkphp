@@ -21,26 +21,26 @@ class CookieModel
     public $expire = 0;
 
     /**
-     * @var string
+     * @var string|null
      */
-    public $path = '/';
+    public $path = null;
 
     /**
-     * @var string
+     * @var string|null
      */
-    public $domain = '';
+    public $domain = null;
 
     /**
-     * @var bool
+     * @var bool|null
      */
-    public $secure = true;
+    public $secure = null;
 
     /**
-     * @var bool
+     * @var bool|null
      */
-    public $httpOnly = true;
+    public $httpOnly = null;
 
-    public function __construct(string $name, string $content, int $expire)
+    public function __construct(string $name, string $content, int $expire = 0)
     {
         $this->name = $name;
         $this->content = $content;

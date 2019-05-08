@@ -21,7 +21,7 @@ class Controller
             $response->setContentType('text/html');
         } else {
             if (!is_array($response) || empty($response)) {
-                $response = ['status' => 'OK', 'errors' => []];
+                $response = ['status' => 'ok', 'errors' => []];
             }
 
             $response = new Json($response);

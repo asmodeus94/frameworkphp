@@ -27,7 +27,7 @@ class Autowiring
     /**
      * @var AutowiringFactoryInterface[]
      */
-    private static $references = [];
+    private $references = [];
 
     public function __construct(string $class, string $method)
     {
@@ -57,8 +57,8 @@ class Autowiring
      */
     private function makeInstanceOf(string $class): ?AutowiringFactoryInterface
     {
-        if (isset(self::$references[$class])) {
-            return self::$references[$class];
+        if (isset($this->references[$class])) {
+            return $this->references[$class];
         }
 
         if (!class_exists($class)) {
@@ -69,9 +69,9 @@ class Autowiring
 
         if ($reflection->implementsInterface('App\Autowiring\AutowiringFactoryInterface')) {
             /** @var AutowiringFactoryInterface $class */
-            self::$references[(string)$class] = $class::getInstance();
+            $this->references[(string)$class] = $class::getInstance();
 
-            return self::$references[$class];
+            return $this->references[$class];
         }
 
         return null;

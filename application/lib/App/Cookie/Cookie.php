@@ -6,7 +6,9 @@ class Cookie extends CookieModel
 {
     public function __construct(string $name, string $content)
     {
-        parent::__construct($name, $content, 0);
+        $this->name = $name;
+        $this->content = $content;
+        $this->expire = null;
     }
 
     /**

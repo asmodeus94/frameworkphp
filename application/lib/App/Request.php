@@ -71,7 +71,7 @@ class Request
         if (!empty($_COOKIE)) {
             $this->cookies = [];
             foreach ($_COOKIE as $name => $content) {
-                $this->cookies[$name] = new Cookie($name, $content);
+                $this->cookies[$name] = new Cookie($name, $content, null);
             }
         }
 

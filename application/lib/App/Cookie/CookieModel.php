@@ -16,7 +16,7 @@ class CookieModel
     public $content;
 
     /**
-     * @var int
+     * @var int|null
      */
     public $expire = 0;
 
@@ -39,11 +39,4 @@ class CookieModel
      * @var bool|null
      */
     public $httpOnly = null;
-
-    public function __construct(string $name, string $content, int $expire = 0)
-    {
-        $this->name = $name;
-        $this->content = $content;
-        $this->expire = $expire;
-    }
 }

@@ -1,6 +1,6 @@
 {% extends "base.twig" %}
 
 {% block body %}
-    something different
-    {{ path('basic-test2', params) }}
+    something different<br>
+    {{ path('basic-test2', params, query) }}
 {% endblock %}

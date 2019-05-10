@@ -26,6 +26,17 @@ class DashboardController extends Controller
 
     public function test(string $title)
     {
-        return $this->response(new View('dashboard/test.twig', ['title' => $title, 'params' => ['title' => $title, 'page' => 5]]));
+        $params = [
+            'title' => $title,
+            'multiParams' => [
+                's' => 'd'
+            ]
+        ];
+
+        $query = [
+            'page' => 5
+        ];
+
+        return $this->response(new View('dashboard/test.twig', ['title' => $title, 'params' => $params, 'query' => $query]));
     }
 }

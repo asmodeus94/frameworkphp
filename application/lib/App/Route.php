@@ -212,10 +212,26 @@ class Route
         $path = $this->rules[$routeName]['path'];
 
         foreach ($params as $name => $value) {
+            if (is_array($value)) {
+                continue;
+            }
+
             $path = preg_replace('/{' . $name . '(?::([a-zA-Z]+))?}/', $value, $path, 1);
         }
 
+        if (isset($params[self::MULTI_PARAMS_PATTERN]) && is_array($params[self::MULTI_PARAMS_PATTERN])) {
+            $multiParams = [];
+            foreach ($params[self::MULTI_PARAMS_PATTERN] as $name => $value) {
+                $multiParams[] = $name;
+                $multiParams[] = $value;
+            }
+
+            $multiParams = implode('/', $multiParams);
+            $path = str_replace('{' . self::MULTI_PARAMS_PATTERN . '}', '/' . $multiParams, $path);
+        }
+
         $path = preg_replace('/\[[^[]*?[{.*}]\]/', '', $path);
+        $path = preg_replace('/{.*?}/', '', $path);
         $path = str_replace(['[', ']'], ['', ''], $path);
 
         if (!empty($query)) {

@@ -5,6 +5,7 @@ namespace App;
 
 use App\Autowiring\Autowiring;
 use App\Response\AbstractResponse;
+use App\Response\Code;
 
 class App
 {
@@ -81,7 +82,7 @@ class App
      */
     private function callController(string $class, string $method, array $arguments)
     {
-        list($constructorArguments, $methodArguments) = $arguments;
+        [$constructorArguments, $methodArguments] = $arguments;
 
         $controller = empty($constructorArguments) ? new $class()
             : call_user_func_array([new \ReflectionClass($class), 'newInstance'], $constructorArguments);
@@ -108,12 +109,12 @@ class App
     /**
      * Uruchamia aplikację poprzez wywołanie metody kontrolera
      */
-    public function run()
+    public function run(): void
     {
         $this->route = Route::getInstance();
         $this->route->setRequest(Request::getInstance());
 
-        list($class, $method) = $this->route->run();
+        [$class, $method] = $this->route->run();
         $hasResponse = false;
         $responseCode = null;
 
@@ -130,16 +131,16 @@ class App
             } catch (\Exception $ex) {
                 // todo: Dodać logowanie błędów (monolog)
                 var_dump($ex);
-                $responseCode = 500;
+                $responseCode = Code::INTERNAL_SERVER_ERROR;
             } catch (\Error $er) {
                 var_dump($er);
-                $responseCode = 500;
+                $responseCode = Code::INTERNAL_SERVER_ERROR;
             }
         }
 
         if (!$hasResponse) {
             if ($responseCode === null) {
-                $responseCode = 404;
+                $responseCode = Code::NOT_FOUND;
             }
 
             http_response_code($responseCode);

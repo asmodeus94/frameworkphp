@@ -4,6 +4,7 @@ namespace Dashboard;
 
 
 use App\Controller;
+use App\Helper\RouteHelper;
 use App\Response\View;
 
 class DashboardController extends Controller
@@ -20,11 +21,11 @@ class DashboardController extends Controller
 
     public function index()
     {
-        return $this->redirect('/dashboard/smthing');
+        return $this->redirect(RouteHelper::path('basic-test2', ['title' => 'smthing']));
     }
 
-    public function test(string $title, array $get, ?array $cookies)
+    public function test(string $title)
     {
-        return $this->response(new View('dashboard/test.twig', ['title' => 'd']));
+        return $this->response(new View('dashboard/test.twig', ['title' => $title, 'params' => ['title' => $title, 'page' => 5]]));
     }
 }

@@ -6,6 +6,8 @@ namespace App\Helper;
 class Type
 {
     /**
+     * Zwraca nazwę typu zmiennej
+     *
      * @param mixed $var
      *
      * @return string
@@ -25,6 +27,8 @@ class Type
     }
 
     /**
+     * Rzutuje zmienną na podany typ
+     *
      * @param mixed  $var
      * @param string $type
      *

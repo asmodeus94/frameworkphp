@@ -3,8 +3,6 @@
 namespace App;
 
 
-use App\Helper\Url;
-
 class Route
 {
     /**
@@ -92,7 +90,7 @@ class Route
     }
 
     /**
-     * Na podstawie reguły routingu (jej ścieżki) tworzy wyr. regularne umożliwiające podanej przez użytkownika ścieżki
+     * Na podstawie reguły routingu (jej ścieżki) tworzy wyr. regularne umożliwiające sprawdzenie poprawności ścieżki
      *
      * @param string $path
      *
@@ -103,50 +101,52 @@ class Route
         $path = str_replace(['/', '-'], ['\/', '\-'], $path);
         $path = preg_replace('/\[(.*?)\]/', '(?:$1)?', $path);
 
-        preg_match_all('/(?:{[a-zA-Z\-_]+(?::[a-zA-Z]+)?})/', $path, $pathGroup);
+        preg_match_all('/(?:{[a-zA-Z\-_]+(?::[a-zA-Z]+)?})/', $path, $placeholderGroups);
 
         $regexp = $path;
-        $pathGroup = $pathGroupCopy = $pathGroup[0];
-        foreach ($pathGroup as &$group) {
-            if (!preg_match('/{([a-zA-Z\-_]+)(?::([a-zA-Z]+))?}/', $group, $groupAnalyzed)) {
+        $placeholderGroups = $placeholderGroupsCopy = $placeholderGroups[0];
+        foreach ($placeholderGroups as &$placeholder) {
+            if (!preg_match('/{([a-zA-Z\-_]+)(?::([a-zA-Z]+))?}/', $placeholder, $placeholderAnalyzed)) {
                 continue;
             }
 
-            $groupRegexp = null;
-            if ($groupAnalyzed[1] === self::MULTI_PARAMS_PATTERN) {
-                $groupRegexp = self::PREDEFINED_PATTERNS_MAP[self::MULTI_PARAMS_PATTERN];
-            } elseif (isset($groupAnalyzed[2]) && isset(self::PREDEFINED_PATTERNS_MAP[$groupAnalyzed[2]])) {
-                $groupRegexp = self::PREDEFINED_PATTERNS_MAP[$groupAnalyzed[2]];
+            $placeholderRegexp = null;
+            if ($placeholderAnalyzed[1] === self::MULTI_PARAMS_PATTERN) {
+                $placeholderRegexp = self::PREDEFINED_PATTERNS_MAP[self::MULTI_PARAMS_PATTERN];
+            } elseif (isset($placeholderAnalyzed[2]) && isset(self::PREDEFINED_PATTERNS_MAP[$placeholderAnalyzed[2]])) {
+                $placeholderRegexp = self::PREDEFINED_PATTERNS_MAP[$placeholderAnalyzed[2]];
             }
 
-            if ($groupRegexp === null) {
-                $groupRegexp = '.*?';
+            if ($placeholderRegexp === null) {
+                $placeholderRegexp = '.*?';
             }
 
-            $pattern = '(?<' . $groupAnalyzed[1] . '>' . $groupRegexp . ')';
-            $group = str_replace($groupAnalyzed[0], $pattern, $group);
+            $pattern = '(?<' . $placeholderAnalyzed[1] . '>' . $placeholderRegexp . ')';
+            $placeholder = str_replace($placeholderAnalyzed[0], $pattern, $placeholder);
         }
 
-        return '/^' . str_replace($pathGroupCopy, $pathGroup, $regexp) . '$/';
+        return '/^' . str_replace($placeholderGroupsCopy, $placeholderGroups, $regexp) . '$/';
     }
 
     /**
-     * @param string $routeName
-     * @param string $url
+     * Dla podanego routingu sprawdza, czy ścieżka jest zgodna z wyrażeniem regularnym
+     *
+     * @param string $routeName Nazwa routingu
+     * @param string $path      Ścieżka do sprawdzenia
      *
      * @return bool
      */
-    public function validate(string $routeName, string $url): bool
+    public function validate(string $routeName, string $path): bool
     {
         if (!isset($this->rules[$routeName]) || ($regexp = $this->prepareRegexp($this->rules[$routeName]['path'])) === null) {
             return false;
         }
 
-        if (($strPos = strpos($url, '?')) !== false) {
-            $url = substr($url, 0, $strPos);
+        if (($strPos = strpos($path, '?')) !== false) {
+            $path = substr($path, 0, $strPos);
         }
 
-        return (bool)preg_match($regexp, $url);
+        return (bool)preg_match($regexp, $path);
     }
 
     /**
@@ -194,6 +194,35 @@ class Route
         }
 
         return null;
+    }
+
+    /**
+     * @param string $routeName
+     * @param array  $params
+     * @param array  $query
+     *
+     * @return string|null
+     */
+    public function makePath(string $routeName, array $params = [], array $query = []): ?string
+    {
+        if (!isset($this->rules[$routeName])) {
+            return null;
+        }
+
+        $path = $this->rules[$routeName]['path'];
+
+        foreach ($params as $name => $value) {
+            $path = preg_replace('/{' . $name . '(?::([a-zA-Z]+))?}/', $value, $path, 1);
+        }
+
+        $path = preg_replace('/\[[^[]*?[{.*}]\]/', '', $path);
+        $path = str_replace(['[', ']'], ['', ''], $path);
+
+        if (!empty($query)) {
+            $path .= '?' . http_build_query($query);
+        }
+
+        return $this->validate($routeName, $path) ? $path : null;
     }
 
     /**

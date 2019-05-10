@@ -22,8 +22,10 @@ abstract class AbstractResponse
      *
      * @return $this
      */
-    public function setContentType(string $type): AbstractResponse
+    public function setContentType(string $type = Type::DEFAULT_TYPE): AbstractResponse
     {
+        $availableTypes = array_flip(Type::getConstants());
+        $type = isset($availableTypes[$type]) ? $type : Type::DEFAULT_TYPE;
         header('Content-Type: ' . $type);
 
         return $this;

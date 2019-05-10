@@ -10,7 +10,7 @@ return [
         'allowedHttpMethods' => ['POST', 'GET']
     ],
     'test2' => [
-        'path' => 'dashboard/{title:slug}[-d][/{book:slug}][/page/{page:number}]',
+        'path' => 'dashboard/{title:slug}[/{book:slug}][/page/{page:number}]',
         'class' => \Dashboard\DashboardController::class,
         'method' => 'test',
         'allowedHttpMethods' => ['GET']

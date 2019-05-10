@@ -3,30 +3,37 @@
 namespace App;
 
 
+use App\Response\Code;
 use App\Response\Json;
 use App\Response\AbstractResponse;
+use App\Response\Type;
 use App\Response\View;
 
 class Controller
 {
     /**
+     * Przygotowuje obiekt odpowiedzi
+     *
      * @param array|View $response
      * @param int        $code
      *
      * @return AbstractResponse
      */
-    protected function response($response = [], int $code = 200): AbstractResponse
+    protected function response($response = [], int $code = Code::OK): AbstractResponse
     {
         if ($response instanceof View) {
-            $response->setContentType('text/html');
+            $response->setContentType();
         } else {
             if (!is_array($response) || empty($response)) {
-                $response = ['status' => 'ok', 'errors' => []];
+                $response = [
+                    'status' => 'ok',
+                    'errors' => []
+                ];
             }
 
             $response = new Json($response);
             $response->encode();
-            $response->setContentType('application/json');
+            $response->setContentType(Type::APPLICATION_JSON);
         }
 
         $response->setCode($code);
@@ -34,8 +41,34 @@ class Controller
         return $response;
     }
 
-    protected function redirect($url)
+    /**
+     * Przygotowuje obiekt oodpowiedzi dla błędu
+     *
+     * @param array $errors Tablica błędów
+     * @param int   $code   Kod błędu
+     *
+     * @return AbstractResponse
+     */
+    protected function responseError(array $errors = [], int $code = Code::INTERNAL_SERVER_ERROR)
     {
-        return new Redirect($url);
+        $response = [
+            'status' => 'error',
+            'errors' => $errors
+        ];
+
+        return $this->response($response, $code);
+    }
+
+    /**
+     * Przygotowuje przekierowanie
+     *
+     * @param string $url  Adres url lub ścieżka
+     * @param int    $code Kod przekierowania
+     *
+     * @return Redirect
+     */
+    protected function redirect(string $url, int $code = Code::MOVED_PERMANENTLY)
+    {
+        return (new Redirect($url))->setCode($code);
     }
 }

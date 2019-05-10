@@ -157,7 +157,7 @@ class DB implements AutowiringFactoryInterface
     private function makeStatement(string $query, ?array $parameters): DriverStatement
     {
         if (!empty($parameters) && preg_match_all('/\(' . self::MULTI_PARAMS_PLACEHOLDER . '\)/', $query, $matches)) {
-            list($query, $parameters) = $this->replaceMultiParamsPlaceholderWithQuestionMarks($query, $parameters);
+            [$query, $parameters] = $this->replaceMultiParamsPlaceholderWithQuestionMarks($query, $parameters);
         }
 
         $stmt = $this->connection->prepare($query);

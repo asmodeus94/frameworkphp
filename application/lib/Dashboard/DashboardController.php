@@ -3,11 +3,11 @@
 namespace Dashboard;
 
 
-use App\Controller;
+use App\AbstractController;
 use App\Helper\RouteHelper;
 use App\Response\View;
 
-class DashboardController extends Controller
+class DashboardController extends AbstractController
 {
     /**
      * @var \DB

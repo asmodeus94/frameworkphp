@@ -9,7 +9,7 @@ use App\Response\AbstractResponse;
 use App\Response\Type;
 use App\Response\View;
 
-class Controller
+abstract class AbstractController
 {
     /**
      * Przygotowuje obiekt odpowiedzi
@@ -71,4 +71,6 @@ class Controller
     {
         return (new Redirect($url))->setCode($code);
     }
+
+    abstract public function index();
 }

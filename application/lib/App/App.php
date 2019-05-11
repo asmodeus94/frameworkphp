@@ -64,7 +64,7 @@ class App
     {
         $reflection = new \ReflectionClass($controller);
         if ($reflection->isAbstract() || $reflection->getConstructor() === null || !$reflection->getConstructor()->isPublic()
-            || !$reflection->isSubclassOf('App\Controller') || !$reflection->hasMethod($method)) {
+            || !$reflection->isSubclassOf('App\AbstractController') || !$reflection->hasMethod($method)) {
             return false;
         }
 

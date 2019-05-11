@@ -29,7 +29,7 @@ class Route
      */
     private const PREDEFINED_PATTERNS_MAP = [
         self::MULTI_PARAMS_PATTERN => '(?:[\/][a-z0-9_-]*)*',
-        'slug' => '(?:[a-z0-9]*(?:-[a-z0-9]+)*?)+',
+        'slug' => '(?:[a-z0-9]+(?:-[a-z0-9]+)*?)+',
         'number' => '[0-9]+',
         'word' => '[a-zA-Z]+',
     ];

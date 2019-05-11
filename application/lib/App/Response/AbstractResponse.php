@@ -12,6 +12,8 @@ abstract class AbstractResponse
      */
     public function setCode(int $code): AbstractResponse
     {
+        $availableCodes = array_flip(Code::getConstants());
+        $code = isset($availableCodes[$code]) ? $code : Code::INTERNAL_SERVER_ERROR;
         http_response_code($code);
 
         return $this;

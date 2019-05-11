@@ -258,15 +258,9 @@ class Autowiring
      */
     private function analyzeConstructor(): array
     {
-        $arguments = [];
         $reflection = new \ReflectionClass($this->class);
 
-        $reflection = $reflection->getConstructor();
-        if ($reflection !== null && $reflection->isPublic()) {
-            $arguments = $this->analyzeParameters($reflection->getParameters(), $this->class);
-        }
-
-        return $arguments;
+        return $this->analyzeParameters($reflection->getConstructor()->getParameters(), $this->class);
     }
 
     /**

@@ -3,8 +3,12 @@
 namespace App\Response;
 
 
+use App\Helper\ConstantExportTrait;
+
 class Code
 {
+    use ConstantExportTrait;
+
     const OK = 200;
     const MOVED_PERMANENTLY = 301;
     const MOVED_TEMPORARILY = 302;

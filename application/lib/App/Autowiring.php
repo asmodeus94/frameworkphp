@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Autowiring;
+namespace App;
 
 
 use App\Cookie\Cookie;
 use App\Helper\Type;
-use App\Route;
 
 class Autowiring
 {
@@ -25,7 +24,12 @@ class Autowiring
     private $method;
 
     /**
-     * @var AutowiringFactoryInterface[]
+     * @var array
+     */
+    private $interfaceRules = [];
+
+    /**
+     * @var \stdClass[]
      */
     private $references = [];
 
@@ -33,6 +37,7 @@ class Autowiring
     {
         $this->class = $class;
         $this->method = $method;
+        $this->loadRulesForInterfaces();
     }
 
     /**
@@ -47,34 +52,70 @@ class Autowiring
         return $this;
     }
 
+
     /**
-     * Tworzy obiekt podanej klasy implementującej interfejs fabryki obiektów
-     *
-     * @param string $class
-     *
-     * @return AutowiringFactoryInterface|null
-     * @throws \ReflectionException
+     * Ładuje dodatkowe reguły dla typów interfejsowych
      */
-    private function makeInstanceOf(string $class): ?AutowiringFactoryInterface
+    private function loadRulesForInterfaces(): void
     {
-        if (isset($this->references[$class])) {
-            return $this->references[$class];
+        $rulesForInterfaces = [];
+        $autowiringFiles = array_diff(scandir(AUTOWIRING), ['.', '..']);
+        foreach ($autowiringFiles as $autowiringFile) {
+            if (strpos($autowiringFile, '.php') === false) {
+                continue;
+            }
+
+            $tmp = require AUTOWIRING . $autowiringFile;
+            $rulesForInterfaces = array_merge($rulesForInterfaces, $tmp);
         }
 
-        if (!class_exists($class)) {
+        $this->interfaceRules = $rulesForInterfaces;
+    }
+
+    /**
+     * Tworzy obiekt podanego typu, a w przypadku typów interfejsowych korzysta z reguł wiązania interfejsów z
+     * odpowiednimi klasamia w zależności od klasy w której zachodzi wiązanie
+     *
+     * @param string $className
+     * @param string $invoker
+     *
+     * @return \stdClass
+     * @throws \ReflectionException
+     *
+     * @see Autowiring::loadRulesForInterfaces()
+     */
+    private function makeInstanceOf(string $className, string $invoker)
+    {
+        if (isset($this->references[$className])) {
+            return $this->references[$className];
+        }
+
+        if (!class_exists($className) && !interface_exists($className)) {
             return null;
         }
 
-        $reflection = new \ReflectionClass($class);
-
-        if ($reflection->implementsInterface('App\Autowiring\AutowiringFactoryInterface')) {
-            /** @var AutowiringFactoryInterface $class */
-            $this->references[(string)$class] = $class::getInstance();
-
-            return $this->references[$class];
+        $reflection = new \ReflectionClass($className);
+        if ($reflection->isInterface() && isset($this->interfaceRules[$className][$invoker])
+            && class_exists($this->interfaceRules[$className][$invoker])) {
+            return $this->makeInstanceOf($this->interfaceRules[$className][$invoker], $className);
         }
 
-        return null;
+        if ($reflection->hasMethod('getInstance')) {
+            return $this->references[$className] = $className::getInstance();
+        }
+
+        $parameters = [];
+        if (($constructor = $reflection->getConstructor()) !== null && !empty($parameters = $constructor->getParameters())) {
+            $parameters = $this->analyzeParameters($parameters, $className);
+        }
+
+        if (!empty($parameters)) {
+            $class = call_user_func_array([new \ReflectionClass($className), 'newInstance'], $parameters);
+        } else {
+            $class = new $className();
+        }
+
+        return $this->references[$className] = $class;
     }
 
     /**
@@ -165,12 +206,13 @@ class Autowiring
      * Analizuje przekazane parametry
      *
      * @param \ReflectionParameter[] $reflectionParameters
+     * @param string                 $invoker   Nazwa klasy wywołującej analizę parametrów
      * @param bool                   $forMethod Analiza dla metod (true) poszerzona o typy wbudowane
      *
      * @return array
      * @throws \ReflectionException
      */
-    private function analyzeParameters(array $reflectionParameters, bool $forMethod = false): array
+    private function analyzeParameters(array $reflectionParameters, string $invoker, bool $forMethod = false): array
     {
         if (empty($reflectionParameters)) {
             return [];
@@ -198,7 +240,7 @@ class Autowiring
                 continue;
             }
 
-            if (!$isBuiltin && ($instance = $this->makeInstanceOf($type)) !== null) {
+            if (!$isBuiltin && ($instance = $this->makeInstanceOf($type, $invoker)) !== null) {
                 $arguments[] = $instance;
             } else {
                 $arguments[] = null;
@@ -221,7 +263,7 @@ class Autowiring
 
         $reflection = $reflection->getConstructor();
         if ($reflection !== null && $reflection->isPublic()) {
-            $arguments = $this->analyzeParameters($reflection->getParameters());
+            $arguments = $this->analyzeParameters($reflection->getParameters(), $this->class);
         }
 
         return $arguments;
@@ -237,11 +279,11 @@ class Autowiring
     {
         $reflection = new \ReflectionMethod($this->class, $this->method);
 
-        return $this->analyzeParameters($reflection->getParameters(), true);
+        return $this->analyzeParameters($reflection->getParameters(), $this->class, true);
     }
 
     /**
-     * Uruchamia analizę konstruktora oraz metody
+     * Uruchamia analizę konstruktora oraz metody kontolera
      *
      * @return array
      * @throws \ReflectionException

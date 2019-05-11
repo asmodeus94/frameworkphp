@@ -1,6 +1,5 @@
 <?php
 
-use App\Autowiring\AutowiringFactoryInterface;
 use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\Driver\PDOConnection;
 use Doctrine\DBAL\DriverManager;
@@ -9,7 +8,7 @@ use Doctrine\DBAL\ConnectionException;
 use Doctrine\DBAL\Driver\Statement as DriverStatement;
 use Doctrine\DBAL\ParameterType;
 
-class DB implements AutowiringFactoryInterface
+class DB
 {
     /**
      * @var DB
@@ -53,7 +52,7 @@ class DB implements AutowiringFactoryInterface
      *
      * @return DB
      */
-    public static function getInstance(?string $id = null): AutowiringFactoryInterface
+    public static function getInstance(?string $id = null): DB
     {
         $id = md5((string)$id);
         if (!isset(self::$instance[$id])) {

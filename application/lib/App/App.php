@@ -3,7 +3,6 @@
 namespace App;
 
 
-use App\Autowiring\Autowiring;
 use App\Response\AbstractResponse;
 use App\Response\Code;
 
@@ -21,13 +20,14 @@ class App
     }
 
     /**
-     * Ustawia stałe
+     * Ustawia stałe zawierające ścieżki do katalogów
      */
     private function setConstants(): void
     {
         define('CONFIG', APP . 'config' . DIRECTORY_SEPARATOR);
         define('CACHE', APP . 'cache' . DIRECTORY_SEPARATOR);
         define('ROUTING', CONFIG . 'routing' . DIRECTORY_SEPARATOR);
+        define('AUTOWIRING', CONFIG . 'autowiring' . DIRECTORY_SEPARATOR);
 
         define('TWIG_TEMPLATES', APP . 'view' . DIRECTORY_SEPARATOR);
     }

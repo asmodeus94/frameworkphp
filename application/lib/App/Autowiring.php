@@ -222,6 +222,7 @@ class Autowiring
         foreach ($reflectionParameters as $parameter) {
             if (($type = $parameter->getType()) === null) {
                 $arguments[] = null;
+
                 continue;
             }
 
@@ -242,9 +243,11 @@ class Autowiring
 
             if (!$isBuiltin && ($instance = $this->makeInstanceOf($type, $invoker)) !== null) {
                 $arguments[] = $instance;
-            } else {
-                $arguments[] = null;
+
+                continue;
             }
+
+            $arguments[] = null;
         }
 
         return $arguments;

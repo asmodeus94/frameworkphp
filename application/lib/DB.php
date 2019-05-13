@@ -206,6 +206,20 @@ class DB
     }
 
     /**
+     * Wywołuje zapytanie z pominięciem analizy typów zmiennych
+     *
+     * @param string     $query
+     * @param array|null $parameters
+     *
+     * @return bool
+     * @throws DBALException
+     */
+    public function rawQuery(string $query, ?array $parameters = null): bool
+    {
+        return $this->connection->prepare($query)->execute($parameters);
+    }
+
+    /**
      * Pobiera pojedynczą wartość
      *
      * @param string $query

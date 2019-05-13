@@ -71,13 +71,13 @@ class Configurator
      */
     private function setToStorage(string $name, $data): bool
     {
-        $query = 'INSERT INTO `config` (`name`, `data`) VALUES (:name, CAST(:data AS JSON)) ON DUPLICATE KEY UPDATE `data` = CAST(:data AS JSON)';
+        $query = 'INSERT INTO `config` (`name`, `data`) VALUES (:name, :data) ON DUPLICATE KEY UPDATE `data` = :data';
         $parameters = [
             'name' => $name,
-            'data' => json_encode($data, JSON_FORCE_OBJECT)
+            'data' => json_encode($data)
         ];
 
-        return $this->db->query($query, $parameters);
+        return $this->db->rawQuery($query, $parameters);
     }
 
     /**

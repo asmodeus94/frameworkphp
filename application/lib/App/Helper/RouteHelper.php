@@ -10,14 +10,18 @@ class RouteHelper
     /**
      * Tworzy ścieżkę na podstawie nazwy routingu, parametów lub dodatkowych parametrów (które będą rozdzielone &)
      *
-     * @param string $routeName Nazwa routingu
-     * @param array  $params
-     * @param array  $query
+     * @param string|null $routeName Nazwa routingu
+     * @param array|null  $params
+     * @param array|null  $query
      *
      * @return string
      */
-    public static function path(string $routeName, array $params = [], array $query = []): string
+    public static function path(?string $routeName, ?array $params = [], ?array $query = []): string
     {
+        if ($routeName === null || $params === null || $query === null) {
+            return '';
+        }
+
         return ($path = Route::getInstance()->makePath($routeName, $params, $query)) !== null ? $path : '';
     }
 }

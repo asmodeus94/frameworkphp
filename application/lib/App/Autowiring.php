@@ -29,7 +29,7 @@ class Autowiring
     private $interfaceRules = [];
 
     /**
-     * @var \stdClass[]
+     * @var mixed[]
      */
     private $references = [];
 
@@ -51,7 +51,6 @@ class Autowiring
 
         return $this;
     }
-
 
     /**
      * Ładuje dodatkowe reguły dla typów interfejsowych
@@ -79,13 +78,15 @@ class Autowiring
      * @param string $className
      * @param string $invoker
      *
-     * @return \stdClass
+     * @return mixed
      * @throws \ReflectionException
      *
      * @see Autowiring::loadRulesForInterfaces()
      */
     private function makeInstanceOf(string $className, string $invoker)
     {
+        $class = null;
+
         if (isset($this->references[$className])) {
             return $this->references[$className];
         }
@@ -100,22 +101,28 @@ class Autowiring
             return $this->makeInstanceOf($this->interfaceRules[$className][$invoker], $className);
         }
 
-        if ($reflection->hasMethod('getInstance')) {
-            return $this->references[$className] = $className::getInstance();
+        if ($reflection->hasMethod('getInstance') && $reflection->getMethod('getInstance')->isStatic()) {
+            $class = $className::getInstance();
         }
 
-        $parameters = [];
-        if (($constructor = $reflection->getConstructor()) !== null && !empty($parameters = $constructor->getParameters())) {
-            $parameters = $this->analyzeParameters($parameters, $className);
+        if ($class === null) {
+            $parameters = [];
+            if (($constructor = $reflection->getConstructor()) !== null && !empty($parameters = $constructor->getParameters())) {
+                $parameters = $this->analyzeParameters($parameters, $className);
+            }
+
+            if (!empty($parameters)) {
+                $class = call_user_func_array([new \ReflectionClass($className), 'newInstance'], $parameters);
+            } else {
+                $class = new $className();
+            }
         }
 
-        if (!empty($parameters)) {
-            $class = call_user_func_array([new \ReflectionClass($className), 'newInstance'], $parameters);
-        } else {
-            $class = new $className();
-        }
+        $this->references[$className] = $class;
 
-        return $this->references[$className] = $class;
+        $this->callRequiredMethods($class);
+
+        return $class;
     }
 
     /**
@@ -172,6 +179,36 @@ class Autowiring
     }
 
     /**
+     * Wywołuje publiczne metody zawierające adnotacje "@required"
+     *
+     * @param mixed $class
+     *
+     * @throws \ReflectionException
+     */
+    private function callRequiredMethods($class): void
+    {
+        $reflection = new \ReflectionClass($class);
+        if (empty($methods = array_diff($reflection->getMethods(\ReflectionMethod::IS_PUBLIC), $reflection->getMethods(\ReflectionMethod::IS_STATIC)))) {
+            return;
+        }
+
+        /** @var \ReflectionMethod[] $methods */
+        foreach ($methods as $method) {
+            if (($docs = $method->getDocComment()) === false || !preg_match('/\* @required\b[\r\n]/', $docs)) {
+                continue;
+            }
+
+            $methodArguments = $this->analyzeParameters($method->getParameters(), $reflection->getName());
+            $methodName = $method->getName();
+            if (!empty($methodArguments)) {
+                call_user_func_array([$class, $methodName], $methodArguments);
+            } else {
+                $class->{$methodName}();
+            }
+        }
+    }
+
+    /**
      * Analizuje parametr typu wbudowanego szukając parametru o takiej samej nazwie w tablicach get oraz post
      *
      * @param \ReflectionParameter $parameter
@@ -206,7 +243,7 @@ class Autowiring
      * Analizuje przekazane parametry
      *
      * @param \ReflectionParameter[] $reflectionParameters
-     * @param string                 $invoker   Nazwa klasy wywołującej analizę parametrów
+     * @param string                 $invoker   Nazwa klasy dla której wywołana została analiza parametrów
      * @param bool                   $forMethod Analiza dla metod (true) poszerzona o typy wbudowane
      *
      * @return array

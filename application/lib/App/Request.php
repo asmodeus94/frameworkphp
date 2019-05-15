@@ -97,9 +97,9 @@ class Request
      * Dodaje parametr wraz z wartością do tablicy get
      *
      * @param string $param
-     * @param string $value
+     * @param mixed  $value
      */
-    public function appendGet(string $param, string $value): void
+    public function appendGet(string $param, $value): void
     {
         $this->get[$param] = $value;
     }

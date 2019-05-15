@@ -165,31 +165,33 @@ class Route
             $routingRule['path'] = is_array($routingRule['path']) ? $routingRule['path'] : [$routingRule['path']];
             foreach ($routingRule['path'] as $path) {
                 $regexp = $this->prepareRegexp($path);
-                if (preg_match($regexp, $this->request->getPath(), $matches)) {
-                    if (isset($matches[self::MULTI_PARAMS_PATTERN])) {
-                        $multiParams = array_values(array_filter(explode('/', $matches[self::MULTI_PARAMS_PATTERN])));
-                        $nOfEle = count($multiParams);
-                        if ($nOfEle % 2 !== 0) {
-                            unset($multiParams[--$nOfEle]);
-                        }
-
-                        for ($index = 0; $index < $nOfEle - 1; $index += 2) {
-                            $this->request->appendGet($multiParams[$index], $multiParams[$index + 1]);
-                        }
-
-                        unset($matches[self::MULTI_PARAMS_PATTERN]);
-                    }
-
-                    foreach ($matches as $param => $value) {
-                        if (!is_string($param) || $value === '') {
-                            continue;
-                        }
-
-                        $this->request->appendGet($param, $value);
-                    }
-
-                    return $routingRuleName;
+                if (!preg_match($regexp, $this->request->getPath(), $matches)) {
+                    continue;
                 }
+
+                if (isset($matches[self::MULTI_PARAMS_PATTERN])) {
+                    $multiParams = array_values(array_filter(explode('/', $matches[self::MULTI_PARAMS_PATTERN])));
+                    $nOfEle = count($multiParams);
+                    if ($nOfEle % 2 !== 0) {
+                        unset($multiParams[--$nOfEle]);
+                    }
+
+                    for ($index = 0; $index < $nOfEle - 1; $index += 2) {
+                        $this->request->appendGet($multiParams[$index], $multiParams[$index + 1]);
+                    }
+
+                    unset($matches[self::MULTI_PARAMS_PATTERN]);
+                }
+
+                foreach ($matches as $param => $value) {
+                    if (!is_string($param) || $value === '') {
+                        continue;
+                    }
+
+                    $this->request->appendGet($param, $value);
+                }
+
+                return $routingRuleName;
             }
         }
 

@@ -36,6 +36,6 @@ fabric.properties
 # End of https://www.gitignore.io/api/phpstorm
 
 application/vendor/*
-application/lib/*
+application/src/*
 
 CODEOWNERS

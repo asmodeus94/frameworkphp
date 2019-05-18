@@ -1,5 +1,7 @@
 <?php
 
+namespace App;
+
 use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\Driver\PDOConnection;
 use Doctrine\DBAL\DriverManager;
@@ -7,6 +9,8 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ConnectionException;
 use Doctrine\DBAL\Driver\Statement as DriverStatement;
 use Doctrine\DBAL\ParameterType;
+use Generator;
+use PDO;
 
 class DB
 {

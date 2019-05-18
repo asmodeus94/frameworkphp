@@ -11,7 +11,7 @@ class Configurator
     private static $instance = null;
 
     /**
-     * @var \DB
+     * @var \App\DB
      */
     private $db;
 
@@ -27,7 +27,7 @@ class Configurator
      */
     private function __construct()
     {
-        $this->db = \DB::getInstance();
+        $this->db = \App\DB::getInstance();
     }
 
     /**

@@ -4,5 +4,8 @@
         "ext-pdo": "*",
         "doctrine/dbal": "^2.9",
         "ext-json": "*"
+    },
+    "autoload": {
+        "psr-4": { "": "lib/" }
     }
 }

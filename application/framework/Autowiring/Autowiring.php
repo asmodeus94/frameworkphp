@@ -1,10 +1,11 @@
 <?php
 
-namespace App;
+namespace App\Autowiring;
 
 
 use App\Cookie\Cookie;
 use App\Helper\Type;
+use App\Route;
 
 class Autowiring
 {

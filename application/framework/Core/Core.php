@@ -1,12 +1,16 @@
 <?php
 
-namespace App;
+namespace App\Core;
 
 
+use App\Autowiring\Autowiring;
+use App\Redirect;
+use App\Request;
 use App\Response\AbstractResponse;
 use App\Response\Code;
+use App\Route;
 
-class App
+class Core
 {
     /**
      * @var Route
@@ -29,7 +33,9 @@ class App
         define('ROUTING', CONFIG . 'routing' . DIRECTORY_SEPARATOR);
         define('AUTOWIRING', CONFIG . 'autowiring' . DIRECTORY_SEPARATOR);
 
-        define('TWIG_TEMPLATES', APP . 'view' . DIRECTORY_SEPARATOR);
+        define('CACHE_AUTOWIRING', CACHE . 'autowiring' . DIRECTORY_SEPARATOR);
+
+        define('TEMPLATES', APP . 'view' . DIRECTORY_SEPARATOR);
     }
 
     /**

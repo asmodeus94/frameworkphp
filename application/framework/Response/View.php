@@ -36,7 +36,7 @@ class View extends AbstractResponse
 
     public function __construct(?string $layout = null, array $variables = [])
     {
-        $loader = new FilesystemLoader(TWIG_TEMPLATES);
+        $loader = new FilesystemLoader(TEMPLATES);
         $this->twig = new Environment($loader);
         $this->loadFunctions();
         $this->setVariables($variables);

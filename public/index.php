@@ -5,5 +5,4 @@ define('LIB', APP . 'lib' . DIRECTORY_SEPARATOR);
 define('VENDOR', APP . 'vendor' . DIRECTORY_SEPARATOR);
 
 require VENDOR . 'autoload.php';
-
-(new \App\App())->run();
+(new \App\Core\Core())->run();

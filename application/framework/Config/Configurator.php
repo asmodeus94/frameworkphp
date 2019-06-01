@@ -3,6 +3,8 @@
 namespace App\Config;
 
 
+use App\DB;
+
 class Configurator
 {
     /**
@@ -27,7 +29,7 @@ class Configurator
      */
     private function __construct()
     {
-        $this->db = \App\DB::getInstance();
+        $this->db = DB::getInstance();
     }
 
     /**

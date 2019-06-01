@@ -3,12 +3,12 @@
 namespace App\Core;
 
 
-use App\Autowiring\Autowiring;
 use App\Redirect;
 use App\Request;
 use App\Response\AbstractResponse;
 use App\Response\Code;
 use App\Route;
+use App\Autowiring\Autowiring;
 
 class Core
 {
@@ -43,11 +43,11 @@ class Core
      */
     private function setEnvironment(): void
     {
-        if (!empty($environment = getenv('ENVIRONMENT'))) {
-            define('ENVIRONMENT', $environment);
+        if (getenv('ENVIRONMENT') === 'development') {
+            define('DEBUG', 1);
         }
 
-        if (defined('ENVIRONMENT') && ENVIRONMENT === 'development') {
+        if (defined('DEBUG')) {
             error_reporting(E_ALL);
             ini_set("display_errors", 1);
         } else {
@@ -129,8 +129,7 @@ class Core
                 if ($this->isCallable($class, $method)) {
                     $autowiring = new Autowiring($class, $method);
                     $autowiring->setRoute($this->route);
-
-                    $arguments = $autowiring->analyzeController();
+                    $arguments = $autowiring->analyze();
                     $this->callController($class, $method, $arguments);
                     $hasResponse = true;
                 }

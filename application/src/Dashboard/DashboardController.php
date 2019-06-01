@@ -8,7 +8,6 @@ use App\Config\Configurator;
 use App\DB;
 use App\Helper\RouteHelper;
 use App\Response\View;
-use App\Test;
 
 class DashboardController extends AbstractController
 {

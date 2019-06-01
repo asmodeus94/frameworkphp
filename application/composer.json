@@ -3,7 +3,8 @@
         "twig/twig": "^2.0",
         "ext-pdo": "*",
         "doctrine/dbal": "^2.9",
-        "ext-json": "*"
+        "ext-json": "*",
+        "zendframework/zend-hydrator": "^3.0"
     },
     "autoload": {
         "psr-4": {

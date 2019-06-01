@@ -20,6 +20,13 @@ class Route
      */
     private $request;
 
+    /**
+     * Pasująca nazwa routingu
+     *
+     * @var string
+     */
+    private $routingRuleName;
+
     const DEFAULT_METHOD = 'index';
 
     const MULTI_PARAMS_PATTERN = 'multiParams';
@@ -67,6 +74,14 @@ class Route
     public function getRequest(): Request
     {
         return $this->request;
+    }
+
+    /**
+     * @return string
+     */
+    public function getRoutingRuleName(): string
+    {
+        return $this->routingRuleName;
     }
 
     /**
@@ -251,9 +266,9 @@ class Route
     public function run(): array
     {
         $class = $method = null;
-        if (($routingRuleName = $this->analyzePath()) !== null) {
-            $class = !empty($this->rules[$routingRuleName]['class']) ? $this->rules[$routingRuleName]['class'] : null;
-            $method = !empty($this->rules[$routingRuleName]['method']) ? $this->rules[$routingRuleName]['method'] : self::DEFAULT_METHOD;
+        if (($this->routingRuleName = $this->analyzePath()) !== null) {
+            $class = !empty($this->rules[$this->routingRuleName]['class']) ? $this->rules[$this->routingRuleName]['class'] : null;
+            $method = !empty($this->rules[$this->routingRuleName]['method']) ? $this->rules[$this->routingRuleName]['method'] : self::DEFAULT_METHOD;
         }
 
         return [$class, $method];

@@ -353,7 +353,7 @@ class Autowiring
 
         $list = $this->cache->load($this->route->getRoutingRuleName());
 
-        foreach ($list as $className => $data) {
+        foreach ($list as $data) {
             $this->makeInstanceFromCache($data);
         }
     }

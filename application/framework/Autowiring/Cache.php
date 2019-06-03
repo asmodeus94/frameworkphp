@@ -79,7 +79,7 @@ class Cache
     }
 
     /**
-     * Zapisuje do pliku listę klas
+     * Zapisuje do pliku listę klas pod warunkiem, że przed żądaniem cache dla podanej nazwy nie istniało
      *
      * @param string $name
      */

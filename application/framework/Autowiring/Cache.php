@@ -85,11 +85,14 @@ class Cache
      */
     public function save(string $name): void
     {
-        if ($this->cached || empty($this->orderedList)) {
+        if ($this->cached || empty($this->orderedList) || !file_exists(CACHE_AUTOWIRING)) {
             return;
         }
 
         $file = CACHE_AUTOWIRING . $name . '.php';
-        file_put_contents($file, '<?php return ' . var_export($this->orderedList, true) . ';' . PHP_EOL);
+        if (!file_exists($file)) {
+            $data = '<?php return ' . str_replace([' ', PHP_EOL], ['', ''], var_export($this->orderedList, true)) . ';' . PHP_EOL;
+            file_put_contents($file, $data);
+        }
     }
 }

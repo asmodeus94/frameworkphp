@@ -247,8 +247,7 @@ class Route
             $path = str_replace('{' . self::MULTI_PARAMS_PATTERN . '}', '/' . $multiParams, $path);
         }
 
-        $path = preg_replace('/\[[^[]*?[{.*}]\]/', '', $path);
-        $path = preg_replace('/{.*?}/', '', $path);
+        $path = preg_replace(['/\[[^[]*?[{.*}]\]/', '/{.*?}/'], ['', ''], $path);
         $path = str_replace(['[', ']'], ['', ''], $path);
 
         if (!empty($query)) {

@@ -1,10 +1,9 @@
 {
     "require": {
-        "twig/twig": "^2.0",
         "ext-pdo": "*",
-        "doctrine/dbal": "^2.9",
         "ext-json": "*",
-        "zendframework/zend-hydrator": "^3.0",
+        "twig/twig": "^2.0",
+        "doctrine/dbal": "^2.9",
         "symfony/filesystem": "^4.3"
     },
     "autoload": {

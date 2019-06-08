@@ -32,7 +32,7 @@ class DashboardController extends AbstractController
         $params = [
             'title' => $title,
             'multiParams' => [
-                's' => 'd'
+                's' => 'd',
             ]
         ];
 
@@ -40,8 +40,11 @@ class DashboardController extends AbstractController
             'page' => 5
         ];
 
-        exit;
         return $this->response(new View('dashboard/test.twig', ['title' => $title, 'params' => $params, 'query' => $query]));
+    }
 
+    public function dbTest(?string $name)
+    {
+        return $this->response(['content' => $name]);
     }
 }

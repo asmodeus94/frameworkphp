@@ -84,7 +84,7 @@ class Core
      * @param string $method
      * @param array  $arguments
      *
-     * @throws \Exception|\Error|\ReflectionException
+     * @throws \RuntimeException|\Error|\ReflectionException
      */
     private function callController(string $class, string $method, array $arguments)
     {
@@ -100,7 +100,7 @@ class Core
         }
 
         if (!($response instanceof AbstractResponse) && !($response instanceof Redirect)) {
-            throw new \Exception('Response is not an instance of AbstractResponse/Redirect class');
+            throw new \RuntimeException('Response is not an instance of AbstractResponse/Redirect class');
         }
 
         if ($response instanceof AbstractResponse) {

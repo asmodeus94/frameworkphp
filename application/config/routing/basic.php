@@ -1,24 +1,20 @@
 <?php
+
+use App\Route\Rule;
+
 return [
-    'hello-world' => [
-        'path' => [
+    'hello-world' => (new Rule())
+        ->setClass(\Dashboard\DashboardController::class)
+        ->setPaths([
             'dashboard/{unique:word}/page/{page:number}[/add/{name:slug}]{multiParams}',
-            ''
-        ],
-        'class' => \Dashboard\DashboardController::class,
-        'method' => \App\Route\Route::DEFAULT_METHOD,
-        'allowedHttpMethods' => ['POST', 'GET']
-    ],
-    'test2' => [
-        'path' => 'dashboard/{title:slug}[/{book:slug}][/page/{page:number}]{multiParams}',
-        'class' => \Dashboard\DashboardController::class,
-        'method' => 'test',
-        'allowedHttpMethods' => ['GET'],
-    ],
-    'testCli' => [
-        'path' => 'cli/{name}',
-        'class' => \Dashboard\DashboardController::class,
-        'method' => 'dbTest',
-        'allowedCli' => true,
-    ],
+            '',
+        ]),
+    'test2' => (new Rule())
+        ->setPath('dashboard/{title:slug}[/{book:slug}][/page/{page:number}]{multiParams}')
+        ->setClass(\Dashboard\DashboardController::class)
+        ->setMethod('test')
+        ->setAllowedHttpMethods(['GET']),
+    'testCli' => (new Rule('cli/{name}', \Dashboard\DashboardController::class, 'dbTest'))
+        ->setAllowedHttpMethods([])
+        ->allowedCli(true),
 ];

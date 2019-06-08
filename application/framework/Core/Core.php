@@ -3,6 +3,7 @@
 namespace App\Core;
 
 
+use App\Helper\ServerHelper;
 use App\Redirect;
 use App\Request;
 use App\Response\AbstractResponse;
@@ -43,7 +44,7 @@ class Core
      */
     private function setEnvironment(): void
     {
-        if (getenv('ENVIRONMENT') === 'development') {
+        if (getenv('ENVIRONMENT') === 'development' || ServerHelper::isCli()) {
             define('DEBUG', 1);
         }
 

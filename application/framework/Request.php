@@ -43,8 +43,11 @@ class Request
 
     private function __construct()
     {
-        $requestMethod = strtoupper((string)$_SERVER['REQUEST_METHOD']);
-        $this->requestMethod = in_array($requestMethod, self::ALLOWED_HTTP_METHODS) ? $requestMethod : null;
+        if (isset($_SERVER['REQUEST_METHOD'])) {
+            $requestMethod = strtoupper((string)$_SERVER['REQUEST_METHOD']);
+            $this->requestMethod = in_array($requestMethod, self::ALLOWED_HTTP_METHODS) ? $requestMethod : null;
+        }
+
         $this->collectData();
     }
 

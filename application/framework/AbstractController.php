@@ -19,18 +19,11 @@ abstract class AbstractController
      *
      * @return AbstractResponse
      */
-    protected function response($response = [], int $code = Code::OK): AbstractResponse
+    protected function response(array $response = [], int $code = Code::OK): AbstractResponse
     {
         if ($response instanceof View) {
             $response->setContentType();
         } else {
-            if (!is_array($response) || empty($response)) {
-                $response = [
-                    'status' => 'ok',
-                    'errors' => []
-                ];
-            }
-
             $response = new Json($response);
             $response->encode();
             $response->setContentType(Type::APPLICATION_JSON);
@@ -53,6 +46,7 @@ abstract class AbstractController
     {
         $response = [
             'status' => 'error',
+            'content' => '',
             'errors' => $errors
         ];
 

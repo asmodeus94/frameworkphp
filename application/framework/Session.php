@@ -3,11 +3,13 @@
 namespace App;
 
 
+use App\Helper\ServerHelper;
+
 class Session
 {
     public function __construct()
     {
-        if (!isset($_SESSION) && session_id() === '') {
+        if (!isset($_SESSION) && session_id() === '' && !ServerHelper::isCli()) {
             session_start();
         }
     }
@@ -79,8 +81,10 @@ class Session
      */
     public function destroy()
     {
-        session_unset();
-        session_destroy();
-        session_start();
+        if (!ServerHelper::isCli()) {
+            session_unset();
+            session_destroy();
+            session_start();
+        }
     }
 }

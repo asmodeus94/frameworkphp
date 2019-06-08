@@ -13,6 +13,12 @@ return [
         'path' => 'dashboard/{title:slug}[/{book:slug}][/page/{page:number}]{multiParams}',
         'class' => \Dashboard\DashboardController::class,
         'method' => 'test',
-        'allowedHttpMethods' => ['GET']
+        'allowedHttpMethods' => ['GET'],
+    ],
+    'testCli' => [
+        'path' => 'cli/{name}',
+        'class' => \Dashboard\DashboardController::class,
+        'method' => 'dbTest',
+        'allowedCli' => true,
     ],
 ];

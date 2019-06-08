@@ -15,9 +15,28 @@ class Json extends AbstractResponse
      *
      * @param array|string $data
      */
-    public function __construct($data)
+    public function __construct(array $data = [])
     {
         $this->data = $data;
+    }
+
+    private function prepareSkeleton(): void
+    {
+        $hasErrors = !empty($this->data['errors']);
+
+        if (!isset($this->data['status'])) {
+            $this->data['status'] = !$hasErrors ? 'ok' : 'error';
+        }
+
+        if (!isset($this->data['content'])) {
+            $this->data['content'] = '';
+        }
+
+        if (!$hasErrors && !isset($this->data['errors'])) {
+            $this->data['errors'] = [];
+        }
+
+        krsort($this->data);
     }
 
     /**
@@ -26,6 +45,7 @@ class Json extends AbstractResponse
     public function encode(): string
     {
         if (is_array($this->data)) {
+            $this->prepareSkeleton();
             $this->data = json_encode($this->data);
         }
 
@@ -44,6 +64,9 @@ class Json extends AbstractResponse
         return $this->data;
     }
 
+    /**
+     * @return string
+     */
     public function send(): string
     {
         return $this->data;

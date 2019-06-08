@@ -19,14 +19,14 @@ class Core
 
     public function __construct()
     {
-        $this->setConstants();
+        $this->setPaths();
         $this->setEnvironment();
     }
 
     /**
      * Ustawia stałe zawierające ścieżki do katalogów
      */
-    private function setConstants(): void
+    private function setPaths(): void
     {
         define('CONFIG', APP . 'config' . DIRECTORY_SEPARATOR);
         define('CACHE', APP . 'cache' . DIRECTORY_SEPARATOR);
@@ -143,12 +143,14 @@ class Core
             }
         }
 
-        if (!$hasResponse) {
-            if ($responseCode === null) {
-                $responseCode = Code::NOT_FOUND;
-            }
-
-            http_response_code($responseCode);
+        if ($hasResponse) {
+            return;
         }
+
+        if ($responseCode === null) {
+            $responseCode = Code::NOT_FOUND;
+        }
+
+        http_response_code($responseCode);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Autowiring;
 
 
 use App\Cookie\Cookie;
+use App\Helper\ServerHelper;
 use App\Helper\Type;
 use App\Route;
 
@@ -347,7 +348,7 @@ class Autowiring
      */
     private function loadFromCache(): void
     {
-        if (defined('DEBUG')) {
+        if (defined('DEBUG') || ServerHelper::isCli()) {
             return;
         }
 
@@ -363,7 +364,7 @@ class Autowiring
      */
     private function saveToCache(): void
     {
-        if (defined('DEBUG')) {
+        if (defined('DEBUG') || ServerHelper::isCli()) {
             return;
         }
 

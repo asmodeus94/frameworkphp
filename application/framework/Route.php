@@ -3,6 +3,8 @@
 namespace App;
 
 
+use App\Helper\ServerHelper;
+
 class Route
 {
     /**
@@ -171,9 +173,16 @@ class Route
      */
     private function analyzePath(): ?string
     {
+        $isCli = ServerHelper::isCli();
         foreach ($this->rules as $routingRuleName => $routingRule) {
-            if (isset($routingRule['allowedHttpMethods']) && is_array($routingRule['allowedHttpMethods'])
-                && !in_array($this->request->getRequestMethod(), $routingRule['allowedHttpMethods'])) {
+            if (!$isCli) {
+                $notAllowed = isset($routingRule['allowedHttpMethods']) && is_array($routingRule['allowedHttpMethods'])
+                    && !in_array($this->request->getRequestMethod(), $routingRule['allowedHttpMethods']);
+            } else {
+                $notAllowed = empty($routingRule['allowedCli']);
+            }
+
+            if ($notAllowed) {
                 continue;
             }
 
@@ -214,6 +223,8 @@ class Route
     }
 
     /**
+     * Dla podanego routingu, parametrów oraz ew. dodatkowych parametrów (po ?) tworzy względną ścieżkę
+     *
      * @param string $routeName
      * @param array  $params
      * @param array  $query

@@ -4,6 +4,7 @@ namespace App;
 
 
 use App\Cookie\Cookie;
+use App\Helper\ServerHelper;
 
 class Request
 {
@@ -28,14 +29,14 @@ class Request
     private $get = null;
 
     /**
-     * @var Cookie[]|null
-     */
-    private $cookies = null;
-
-    /**
      * @var array|null
      */
     private $post = null;
+
+    /**
+     * @var Cookie[]|null
+     */
+    private $cookies = null;
 
     const ALLOWED_HTTP_METHODS = ['GET', 'POST'];
 
@@ -64,6 +65,18 @@ class Request
      */
     private function collectData(): void
     {
+        if (!ServerHelper::isCli()) {
+            $this->collectDataWeb();
+        } else {
+            $this->collectDataCli();
+        }
+    }
+
+    /**
+     * Zbiera dane w przypadku wejścia przez serwer WWW
+     */
+    private function collectDataWeb(): void
+    {
         if ($this->requestMethod === 'POST' && !empty($_POST)) {
             $this->post = $_POST;
         }
@@ -79,6 +92,8 @@ class Request
             return;
         }
 
+        $this->get = [];
+
         $this->path = !empty($_GET['_path_']) ? $_GET['_path_'] : null;
         unset($_GET['_path_']);
 
@@ -86,10 +101,35 @@ class Request
             return;
         }
 
-        $this->get = [];
-
         foreach ($_GET as $param => $value) {
             $this->get[$param] = $value;
+        }
+    }
+
+    /**
+     * Zbiera dane w przypadku wejścia poprzez skrypt (cli)
+     */
+    private function collectDataCli(): void
+    {
+        if (empty($argument = $_SERVER['argv'][1])) {
+            return;
+        }
+
+        $this->get = [];
+
+        if (($position = stripos($argument, '?')) !== false) {
+            $this->path = substr($argument, 0, $position);
+            $length = strlen($argument);
+            $parsed = [];
+            if ($position + 1 < $length) {
+                parse_str(substr($argument, $position + 1, $length - $position), $parsed);
+            }
+
+            foreach ($parsed as $param => $value) {
+                $this->get[$param] = $value;
+            }
+        } else {
+            $this->path = $argument;
         }
     }
 
@@ -105,9 +145,9 @@ class Request
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getRequestMethod(): string
+    public function getRequestMethod(): ?string
     {
         return $this->requestMethod;
     }

@@ -135,7 +135,7 @@ class Route
             }
 
             if ($placeholderRegexp === null) {
-                $placeholderRegexp = '.*?';
+                $placeholderRegexp = '.+?';
             }
 
             $pattern = '(?<' . $placeholderAnalyzed[1] . '>' . $placeholderRegexp . ')';

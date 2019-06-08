@@ -7,6 +7,7 @@ use App\AbstractController;
 use App\Config\Configurator;
 use App\DB;
 use App\Helper\RouteHelper;
+use App\Request;
 use App\Response\View;
 
 class DashboardController extends AbstractController
@@ -43,7 +44,7 @@ class DashboardController extends AbstractController
         return $this->response(new View('dashboard/test.twig', ['title' => $title, 'params' => $params, 'query' => $query]));
     }
 
-    public function dbTest(?string $name)
+    public function dbTest(string $name)
     {
         return $this->response(['content' => $name]);
     }

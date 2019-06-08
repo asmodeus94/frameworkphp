@@ -122,19 +122,19 @@ class Route
      *
      * @param string $path
      *
-     * @return string|null
+     * @return string
      */
-    private function prepareRegexp(string $path): ?string
+    private function prepareRegexp(string $path): string
     {
         $path = str_replace(['/', '-'], ['\/', '\-'], $path);
         $path = preg_replace('/\[(.*?)\]/', '(?:$1)?', $path);
 
-        preg_match_all('/(?:{[a-zA-Z\-_]+(?::[a-zA-Z]+)?})/', $path, $placeholderGroups);
+        preg_match_all('/(?:{[a-zA-Z_][a-zA-Z0-9_]+(?::[a-zA-Z]+)?})/', $path, $placeholderGroups);
 
         $regexp = $path;
         $placeholderGroups = $placeholderGroupsCopy = $placeholderGroups[0];
         foreach ($placeholderGroups as &$placeholder) {
-            if (!preg_match('/{([a-zA-Z\-_]+)(?::([a-zA-Z]+))?}/', $placeholder, $placeholderAnalyzed)) {
+            if (!preg_match('/{([a-zA-Z_][a-zA-Z0-9_]+)(?::([a-zA-Z]+))?}/', $placeholder, $placeholderAnalyzed)) {
                 continue;
             }
 

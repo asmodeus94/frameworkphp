@@ -6,7 +6,7 @@ return [
             ''
         ],
         'class' => \Dashboard\DashboardController::class,
-        'method' => \App\Route::DEFAULT_METHOD,
+        'method' => \App\Route\Route::DEFAULT_METHOD,
         'allowedHttpMethods' => ['POST', 'GET']
     ],
     'test2' => [

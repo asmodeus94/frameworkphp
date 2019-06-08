@@ -7,7 +7,7 @@ use App\Redirect;
 use App\Request;
 use App\Response\AbstractResponse;
 use App\Response\Code;
-use App\Route;
+use App\Route\Route;
 use App\Autowiring\Autowiring;
 
 class Core

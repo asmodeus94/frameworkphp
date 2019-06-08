@@ -6,7 +6,7 @@ namespace App\Autowiring;
 use App\Cookie\Cookie;
 use App\Helper\ServerHelper;
 use App\Helper\Type;
-use App\Route;
+use App\Route\Route;
 
 class Autowiring
 {

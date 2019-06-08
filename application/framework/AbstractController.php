@@ -14,12 +14,12 @@ abstract class AbstractController
     /**
      * Przygotowuje obiekt odpowiedzi
      *
-     * @param array|View $response
+     * @param View|array $response
      * @param int        $code
      *
      * @return AbstractResponse
      */
-    protected function response(array $response = [], int $code = Code::OK): AbstractResponse
+    protected function response($response = [], int $code = Code::OK): AbstractResponse
     {
         if ($response instanceof View) {
             $response->setContentType();

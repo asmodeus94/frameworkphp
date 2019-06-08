@@ -3,7 +3,7 @@
 namespace App\Helper;
 
 
-use App\Route;
+use App\Route\Route;
 
 class RouteHelper
 {

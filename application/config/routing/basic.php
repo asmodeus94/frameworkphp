@@ -10,7 +10,7 @@ return [
             '',
         ]),
     'test2' => (new Rule())
-        ->setPath('dashboard/{title:slug}[/{book:slug}][/page/{page:number}]{multiParams}')
+        ->setPath('dashboard/title/{title:slug}[/{book:slug}][/page/{page:number}]{multiParams}')
         ->setClass(\Dashboard\DashboardController::class)
         ->setMethod('test')
         ->setAllowedHttpMethods(['GET']),

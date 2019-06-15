@@ -67,7 +67,7 @@ class Session
     }
 
     /**
-     * Zwraca dana zmienna, a nastepnie usuwa ja z sesji.
+     * Zwraca dana zmienna, a nastepnie usuwa ja z sesji
      *
      * @param string $index Klucz zmiennej
      */
@@ -77,7 +77,7 @@ class Session
     }
 
     /**
-     * Usuwa sekret, zmienne sesyjne, niszczy sesje i rozpoczyna nowa.
+     * Usuwa zmienne sesyjne, niszczy sesje i rozpoczyna nowa
      */
     public function destroy()
     {

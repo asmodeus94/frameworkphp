@@ -20,6 +20,9 @@ class Json extends AbstractResponse
         $this->data = $data;
     }
 
+    /**
+     * Przygotowuje odpowiedź
+     */
     private function prepareSkeleton(): void
     {
         $hasErrors = !empty($this->data['errors']);

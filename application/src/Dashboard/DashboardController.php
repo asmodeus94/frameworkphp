@@ -7,7 +7,6 @@ use App\AbstractController;
 use App\Config\Configurator;
 use App\DB;
 use App\Helper\RouteHelper;
-use App\Request;
 use App\Response\View;
 
 class DashboardController extends AbstractController
@@ -29,7 +28,6 @@ class DashboardController extends AbstractController
 
     public function test(string $title, Configurator $configurator, DB $db)
     {
-        var_dump($db->getRows('SELECT * FROM `users`'));
         $params = [
             'title' => $title,
             'multiParams' => [

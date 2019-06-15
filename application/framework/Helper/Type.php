@@ -43,7 +43,7 @@ class Type
         } elseif ($type === 'array') {
             return (array)$var;
         } elseif ($type === 'string') {
-            return (string)$var;
+            return (string)filter_var($var, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
         }
 
         return $var;

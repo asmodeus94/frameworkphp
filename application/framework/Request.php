@@ -114,7 +114,7 @@ class Request
      */
     private function collectDataCli(): void
     {
-        if (empty($argument = $_SERVER['argv'][1])) {
+        if (($argument = $_SERVER['argv'][1] ?? null) === null) {
             return;
         }
 

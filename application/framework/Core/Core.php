@@ -146,6 +146,8 @@ class Core
 
         if ($hasResponse) {
             return;
+        } elseif (!$hasResponse && ServerHelper::isCli()) {
+            echo 'No endpoint selected!';
         }
 
         if ($responseCode === null) {

@@ -10,6 +10,7 @@ use App\Response\AbstractResponse;
 use App\Response\Code;
 use App\Route\Route;
 use App\Autowiring\Autowiring;
+use Monolog\Logger;
 
 class Core
 {
@@ -37,6 +38,8 @@ class Core
         define('CACHE_AUTOWIRING', CACHE . 'autowiring' . DIRECTORY_SEPARATOR);
 
         define('TEMPLATES', APP . 'view' . DIRECTORY_SEPARATOR);
+
+        define('LOGS', APP . 'logs' . DIRECTORY_SEPARATOR);
     }
 
     /**

@@ -28,7 +28,7 @@ class Autowiring
     /**
      * @var array
      */
-    private $interfaceRules = [];
+    private $interfacesRules = [];
 
     /**
      * @var Cache
@@ -39,7 +39,9 @@ class Autowiring
     {
         $this->class = $class;
         $this->method = $method;
-        $this->loadRulesForInterfaces();
+
+        $this->interfacesRules = $this->loadRules('interfaces');
+
         $this->cache = new Cache();
     }
 
@@ -56,22 +58,24 @@ class Autowiring
     }
 
     /**
-     * Ładuje dodatkowe reguły dla typów interfejsowych
+     * @param string $type
+     *
+     * @return array
      */
-    private function loadRulesForInterfaces(): void
+    private function loadRules(string $type): array
     {
-        $rulesForInterfaces = [];
-        $autowiringFiles = array_diff(scandir(AUTOWIRING . 'interfaces'), ['.', '..']);
+        $rules = [];
+        $autowiringFiles = array_diff(scandir(AUTOWIRING . $type), ['.', '..']);
         foreach ($autowiringFiles as $autowiringFile) {
             if (strpos($autowiringFile, '.php') === false) {
                 continue;
             }
 
-            $tmp = require AUTOWIRING . 'interfaces' . DIRECTORY_SEPARATOR . $autowiringFile;
-            $rulesForInterfaces = array_merge($rulesForInterfaces, $tmp);
+            $tmp = require AUTOWIRING . $type . DIRECTORY_SEPARATOR . $autowiringFile;
+            $rules = array_merge($rules, $tmp);
         }
 
-        $this->interfaceRules = $rulesForInterfaces;
+        return $rules;
     }
 
     /**
@@ -261,17 +265,19 @@ class Autowiring
             return null;
         }
 
-        $reflection = new \ReflectionClass($className);
-        if ($invoker !== null && $reflection->isInterface() && isset($this->interfaceRules[$className][$invoker])
-            && class_exists($this->interfaceRules[$className][$invoker])) {
-            return $this->makeInstance($this->interfaceRules[$className][$invoker], $className);
-        }
-
         $parameters = [];
+
+        $reflection = new \ReflectionClass($className);
 
         if ($reflection->hasMethod('getInstance') && $reflection->getMethod('getInstance')->isStatic()) {
             $object = $className::getInstance();
             $hasGetInstance = true;
+        }
+
+        if ($invoker !== null && $reflection->isInterface() && isset($this->interfacesRules[$className][$invoker])
+            && class_exists($this->interfacesRules[$className][$invoker])) {
+            $className = $this->interfacesRules[$className][$invoker];
+            $reflection = new \ReflectionClass($className);
         }
 
         if ($object === null) {
@@ -335,11 +341,10 @@ class Autowiring
             $object = new $data['className']();
         }
 
-        $this->cache->add($object, $parameters, false);
+        $this->cache->add($object, $parameters);
 
         return $object;
     }
-
 
     /**
      * Na podstawie nazwy routingu pobiera odpowiednią listę klas i tworzy ich instancje

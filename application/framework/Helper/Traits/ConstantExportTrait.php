@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Helper;
+namespace App\Helper\Traits;
 
 
 trait ConstantExportTrait

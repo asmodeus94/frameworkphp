@@ -35,7 +35,7 @@ class Cache
      * @param array  $parameters
      * @param bool   $hasGetInstance
      */
-    public function add(object $object, array $parameters, bool $hasGetInstance)
+    public function add(object $object, array $parameters, bool $hasGetInstance = false)
     {
         $className = get_class($object);
         $this->objectReferences[$className] = $object;
@@ -49,8 +49,11 @@ class Cache
         $this->orderedList[$className] = [
             'className' => $className,
             'parameters' => $parameters,
-            'hasGetInstance' => $hasGetInstance,
         ];
+
+        if ($hasGetInstance) {
+            $this->orderedList[$className]['hasGetInstance'] = true;
+        }
     }
 
     /**

@@ -3,7 +3,7 @@
 namespace App\Response;
 
 
-use App\Helper\ConstantExportTrait;
+use App\Helper\Traits\ConstantExportTrait;
 
 class Code
 {

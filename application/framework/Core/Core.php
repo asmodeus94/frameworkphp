@@ -15,52 +15,19 @@ use Monolog\Logger;
 class Core
 {
     /**
+     * @var Logger
+     */
+    private $logger;
+
+    /**
      * @var Route
      */
     private $route;
 
     public function __construct()
     {
-        $this->setPaths();
-        $this->setEnvironment();
-    }
-
-    /**
-     * Ustawia stałe zawierające ścieżki do katalogów
-     */
-    private function setPaths(): void
-    {
-        define('CONFIG', APP . 'config' . DIRECTORY_SEPARATOR);
-        define('CACHE', APP . 'cache' . DIRECTORY_SEPARATOR);
-        define('ROUTING', CONFIG . 'routing' . DIRECTORY_SEPARATOR);
-        define('AUTOWIRING', CONFIG . 'autowiring' . DIRECTORY_SEPARATOR);
-
-        define('CACHE_AUTOWIRING', CACHE . 'autowiring' . DIRECTORY_SEPARATOR);
-
-        define('TEMPLATES', APP . 'view' . DIRECTORY_SEPARATOR);
-
-        define('LOGS', APP . 'logs' . DIRECTORY_SEPARATOR);
-    }
-
-    /**
-     * Ustawia zmienne środowiskowe
-     */
-    private function setEnvironment(): void
-    {
-        if (getenv('ENVIRONMENT') === 'development' || ServerHelper::isCli()) {
-            define('DEBUG', 1);
-        }
-
-        if (defined('DEBUG')) {
-            error_reporting(E_ALL);
-            ini_set("display_errors", 1);
-        } else {
-            ini_set("display_errors", 0);
-        }
-
-        ini_set('xdebug.var_display_max_depth', -1);
-        ini_set('xdebug.var_display_max_children', -1);
-        ini_set('xdebug.var_display_max_data', -1);
+        Environment::init();
+        $this->logger = \App\Logger\Logger::core();
     }
 
     /**
@@ -126,23 +93,28 @@ class Core
 
         [$class, $method] = $this->route->run();
         $hasResponse = false;
+        $isError = false;
         $responseCode = null;
 
         if ($class !== null) {
             try {
                 if ($this->isCallable($class, $method)) {
-                    $autowiring = new Autowiring($class, $method);
-                    $autowiring->setRoute($this->route);
-                    $arguments = $autowiring->analyze();
+                    $arguments = (new Autowiring($class, $method))->analyze();
                     $this->callController($class, $method, $arguments);
                     $hasResponse = true;
                 }
+            } catch (\Doctrine\DBAL\DBALException | \PDOException $ex) {
+                \App\Logger\Logger::db()->addCritical($ex);
+                $isError = true;
             } catch (\Exception $ex) {
-                // todo: Dodać logowanie błędów (monolog)
-                var_dump($ex);
-                $responseCode = Code::INTERNAL_SERVER_ERROR;
+                $this->logger->addError($ex);
+                $isError = true;
             } catch (\Error $er) {
-                var_dump($er);
+                $this->logger->addCritical($er);
+                $isError = true;
+            }
+
+            if ($isError) {
                 $responseCode = Code::INTERNAL_SERVER_ERROR;
             }
         }
@@ -151,6 +123,8 @@ class Core
             return;
         } elseif (!$hasResponse && ServerHelper::isCli()) {
             echo 'No endpoint selected!';
+
+            return;
         }
 
         if ($responseCode === null) {

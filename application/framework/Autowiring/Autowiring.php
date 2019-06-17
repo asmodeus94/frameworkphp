@@ -4,17 +4,11 @@ namespace App\Autowiring;
 
 
 use App\Cookie\Cookie;
-use App\Helper\ServerHelper;
 use App\Helper\Type;
 use App\Route\Route;
 
 class Autowiring
 {
-    /**
-     * @var Route
-     */
-    private $route;
-
     /**
      * @var string
      */
@@ -43,18 +37,6 @@ class Autowiring
         $this->interfacesRules = $this->loadRules('interfaces');
 
         $this->cache = new Cache();
-    }
-
-    /**
-     * @param Route $route
-     *
-     * @return $this
-     */
-    public function setRoute(Route $route): Autowiring
-    {
-        $this->route = $route;
-
-        return $this;
     }
 
     /**
@@ -92,12 +74,12 @@ class Autowiring
         $name = strtolower($parameter->getName());
         if (in_array($name, ['get', 'post']) && $type === 'array') {
             if ($name === 'get') {
-                $get = $this->route->getRequest()->get();
+                $get = Route::getInstance()->getRequest()->get();
                 return $allowsNull ? $get : (!empty($get) ? $get : []);
             }
 
             if ($name === 'post') {
-                $post = $this->route->getRequest()->post();
+                $post = Route::getInstance()->getRequest()->post();
                 return $allowsNull ? $post : (!empty($post) ? $post : []);
             }
         }
@@ -118,7 +100,7 @@ class Autowiring
         $allowsNull = $parameter->getType()->allowsNull();
         $name = $parameter->getName();
         if (in_array($type, ['array', Cookie::class])) {
-            $cookies = $this->route->getRequest()->cookies();
+            $cookies = Route::getInstance()->getRequest()->cookies();
             if (in_array(strtolower($name), ['cookie', 'cookies']) && $type === 'array') {
                 return $allowsNull ? $cookies : (!empty($cookies) ? $cookies : []);
             }
@@ -147,7 +129,7 @@ class Autowiring
             return $getOrPost;
         }
 
-        if (($parameterFromRequest = $this->route->getRequest()->getParameter($name)) !== null) {
+        if (($parameterFromRequest = Route::getInstance()->getRequest()->getParameter($name)) !== null) {
             if ($type !== gettype($parameterFromRequest)) {
                 $parameterFromRequest = Type::cast($parameterFromRequest, $type);
             }
@@ -242,8 +224,8 @@ class Autowiring
     }
 
     /**
-     * Tworzy obiekt podanego typu, a w przypadku typów interfejsowych korzysta z reguł wiązania interfejsów z
-     * odpowiednimi klasamia w zależności od klasy w której zachodzi wiązanie
+     * Tworzy obiekt podanego typu, a w przypadku typów interfejsowych korzysta z reguł wiązania interfejsów
+     * z odpowiednimi klasamia w zależności od klasy w której zachodzi wiązanie
      *
      * @param string      $className Nazwa klasy której obiekt należy utworzyć
      * @param string|null $invoker   Nazwa klasy agregującej obiekt
@@ -255,9 +237,8 @@ class Autowiring
     private function makeInstance(string $className, ?string $invoker = null): object
     {
         $object = null;
-        $hasGetInstance = false;
 
-        if (($object = $this->cache->getByClassName($className)) !== null) {
+        if (($object = $this->cache->getBy($className)) !== null) {
             return $object;
         }
 
@@ -271,7 +252,6 @@ class Autowiring
 
         if ($reflection->hasMethod('getInstance') && $reflection->getMethod('getInstance')->isStatic()) {
             $object = $className::getInstance();
-            $hasGetInstance = true;
         }
 
         if ($invoker !== null && $reflection->isInterface() && isset($this->interfacesRules[$className][$invoker])
@@ -292,88 +272,9 @@ class Autowiring
             }
         }
 
-        $this->cache->add($object, $parameters, $hasGetInstance);
+        $this->cache->add($object);
 
         return $object;
-    }
-
-    /**
-     * Tworzy obiekty na podstawie danych z cache
-     *
-     * @param array $data Tablica zawierająca jako klucze:
-     *                    - nazwę klasy (className),
-     *                    - typy parametrów dla konstruktora (parameters),
-     *                    - informację typu logicznego, czy klasa posiada metodę statyczną getInstance (hasGetInstance)
-     *
-     * @return mixed|null
-     * @throws \ReflectionException
-     *
-     * @see Cache::add()
-     */
-    private function makeInstanceFromCache(array $data)
-    {
-        $object = null;
-        if (($object = $this->cache->getByClassName($data['className'])) !== null) {
-            return $object;
-        }
-
-        if (!empty($data['hasGetInstance'])) {
-            $object = $data['className']::getInstance();
-            $this->cache->add($object, [], true);
-
-            return $object;
-        }
-
-        $list = $this->cache->load($this->route->getRoutingRuleName());
-        $parameters = [];
-
-        if (!empty($data['parameters'])) {
-            foreach ($data['parameters'] as $parameter) {
-                $parameters[] = $this->makeInstanceFromCache($list[$parameter]);
-            }
-
-            if (!empty($parameters)) {
-                $object = call_user_func_array([new \ReflectionClass($data['className']), 'newInstance'], $parameters);
-            }
-        }
-
-        if ($object === null) {
-            $object = new $data['className']();
-        }
-
-        $this->cache->add($object, $parameters);
-
-        return $object;
-    }
-
-    /**
-     * Na podstawie nazwy routingu pobiera odpowiednią listę klas i tworzy ich instancje
-     *
-     * @throws \ReflectionException
-     */
-    private function loadFromCache(): void
-    {
-        if (defined('DEBUG') || ServerHelper::isCli()) {
-            return;
-        }
-
-        $list = $this->cache->load($this->route->getRoutingRuleName());
-
-        foreach ($list as $data) {
-            $this->makeInstanceFromCache($data);
-        }
-    }
-
-    /**
-     * Dla podanego routingu zapisuje listę klas
-     */
-    private function saveToCache(): void
-    {
-        if (defined('DEBUG') || ServerHelper::isCli()) {
-            return;
-        }
-
-        $this->cache->save($this->route->getRoutingRuleName());
     }
 
     /**
@@ -384,11 +285,6 @@ class Autowiring
      */
     public function analyze(): array
     {
-        $this->loadFromCache();
-        $constructorArguments = $this->analyzeConstructor();
-        $methodArguments = $this->analyzeMethod();
-        $this->saveToCache();
-
-        return [$constructorArguments, $methodArguments];
+        return [$this->analyzeConstructor(), $this->analyzeMethod()];
     }
 }

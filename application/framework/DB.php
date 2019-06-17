@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Logger\LoggerFactory;
 use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\Driver\PDOConnection;
 use Doctrine\DBAL\DriverManager;
@@ -10,6 +11,7 @@ use Doctrine\DBAL\ConnectionException;
 use Doctrine\DBAL\Driver\Statement as DriverStatement;
 use Doctrine\DBAL\ParameterType;
 use Generator;
+use Monolog\Logger;
 use PDO;
 
 class DB
@@ -18,6 +20,11 @@ class DB
      * @var DB
      */
     private static $instance = null;
+
+    /**
+     * @var Logger
+     */
+    private static $logger;
 
     /**
      * @var Connection
@@ -38,15 +45,17 @@ class DB
      */
     private function createNewConnection(): ?Connection
     {
+        $connection = null;
         $connectionParams = require CONFIG . 'dbConfig.php';
 
         try {
-            return DriverManager::getConnection($connectionParams);
+            $connection = DriverManager::getConnection($connectionParams);
+            $connection->connect();
         } catch (DBALException $e) {
-            // todo: logger dla klasy db
+            self::$logger->addError($e);
         }
 
-        return null;
+        return $connection;
     }
 
     /**
@@ -58,6 +67,10 @@ class DB
      */
     public static function getInstance(?string $id = null): DB
     {
+        if (!isset(self::$logger)) {
+            self::$logger = \App\Logger\Logger::db();
+        }
+
         $id = md5((string)$id);
         if (!isset(self::$instance[$id])) {
             self::$instance[$id] = new DB();

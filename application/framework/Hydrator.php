@@ -48,18 +48,21 @@ class Hydrator
      * Na podstawie obiektu lub tablicy obiektów tworzy odpowiadającą im tablicę
      *
      * @param object|object[] $object
+     * @param bool            $recursive
      *
      * @return array
      */
-    public function extract($object): array
+    public function extract($object, bool $recursive = false): array
     {
         if (is_object($object)) {
             $object = $this->hydrator->extract($object);
         }
 
-        foreach ($object as $index => &$objectVar) {
-            if (is_object($objectVar) || is_array($objectVar)) {
-                $objectVar = $this->extract($objectVar);
+        if ($recursive) {
+            foreach ($object as $index => &$objectVar) {
+                if (is_object($objectVar) || is_array($objectVar)) {
+                    $objectVar = $this->extract($objectVar, $recursive);
+                }
             }
         }
 

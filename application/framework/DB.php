@@ -2,7 +2,6 @@
 
 namespace App;
 
-use App\Logger\LoggerFactory;
 use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\Driver\PDOConnection;
 use Doctrine\DBAL\DriverManager;
@@ -112,21 +111,43 @@ class DB
     /**
      * Binduje przekazane wartości z zapytaniem
      *
-     * @param DriverStatement $stmt
-     * @param array|null      $parameters
+     * @param string     $query
+     * @param array|null $parameters
+     *
+     * @return DriverStatement
+     *
+     * @throws DBALException
      */
-    private function bindValues(DriverStatement $stmt, ?array $parameters): void
+    private function bindValues($query, ?array $parameters): DriverStatement
     {
+        $stmt = $this->connection->prepare($query);
+
         if (empty($parameters)) {
-            return;
+            return $stmt;
         }
 
-        $numericKeys = is_int(array_keys($parameters)[0]);
+        $assocKeys = !is_int(array_keys($parameters)[0]);
+
+        if ($assocKeys && preg_match_all('/:([a-z][a-z0-9_]*)/', $query, $placeholders)) {
+            $placeholders = array_flip($placeholders[1]);
+        }
 
         foreach ($parameters as $key => $parameter) {
-            $key = !$numericKeys ? ':' . $key : $key + 1;
+            if ($assocKeys) {
+                if (!isset($placeholders[$key])) {
+                    unset($parameters[$key]);
+                    continue;
+                }
+
+                $key = ':' . $key;
+            } else {
+                $key = $key + 1;
+            }
+
             $stmt->bindValue($key, $parameter, $this->detectTypeOfParameter($parameter));
         }
+
+        return $stmt;
     }
 
     /**
@@ -176,10 +197,7 @@ class DB
             [$query, $parameters] = $this->replaceMultiParamsPlaceholderWithQuestionMarks($query, $parameters);
         }
 
-        $stmt = $this->connection->prepare($query);
-        $this->bindValues($stmt, $parameters);
-
-        return $stmt;
+        return $this->bindValues($query, $parameters);
     }
 
     /**

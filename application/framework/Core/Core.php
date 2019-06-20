@@ -40,7 +40,7 @@ class Core
     private function isCallable(string $controller, string $method): bool
     {
         $reflection = new \ReflectionClass($controller);
-        if ($reflection->isAbstract() || $reflection->getConstructor() === null || !$reflection->getConstructor()->isPublic()
+        if ($reflection->isAbstract() || ($reflection->getConstructor() !== null && !$reflection->getConstructor()->isPublic())
             || !$reflection->isSubclassOf('App\AbstractController') || !$reflection->hasMethod($method)) {
             return false;
         }

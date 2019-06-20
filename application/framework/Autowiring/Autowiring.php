@@ -207,7 +207,11 @@ class Autowiring
     {
         $reflection = new \ReflectionClass($this->class);
 
-        return $this->analyzeParameters($reflection->getConstructor()->getParameters(), $this->class);
+        if (($constructor = $reflection->getConstructor()) === null) {
+            return [];
+        }
+
+        return $this->analyzeParameters($constructor->getParameters(), $this->class);
     }
 
     /**

@@ -60,6 +60,10 @@ class View extends AbstractResponse
         $this->twig->addFunction(new TwigFunction('path', function (?string $routeName, ?array $params = [], ?array $query = []) {
             return '/' . RouteHelper::path($routeName, $params, $query);
         }));
+
+        $this->twig->addFunction(new TwigFunction('url', function (string $url) {
+            return filter_var($url, FILTER_VALIDATE_URL) !== false ? $url : '';
+        }));
     }
 
     /**
@@ -106,6 +110,16 @@ class View extends AbstractResponse
     }
 
     /**
+     * Dodaje dodatkowe zmienne dostępne dla każdego widoku
+     */
+    private function appendBasicVariables(): void
+    {
+        if (!isset($this->variables['title']) && isset($_SERVER['SERVER_NAME'])) {
+            $this->appendVariable('title', preg_replace('/^www./', '', $_SERVER['SERVER_NAME']));
+        }
+    }
+
+    /**
      * Zwraca html
      *
      * @return string
@@ -115,6 +129,8 @@ class View extends AbstractResponse
      */
     public function send(): string
     {
+        $this->appendBasicVariables();
+
         return $this->twig->render($this->layout, $this->variables);
     }
 }

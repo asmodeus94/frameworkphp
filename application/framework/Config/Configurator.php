@@ -71,7 +71,7 @@ class Configurator
      * @return bool
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function setToStorage(string $name, $data): bool
+    private function saveToStorage(string $name, $data): bool
     {
         $query = 'INSERT INTO `config` (`name`, `data`) VALUES (:name, :data) ON DUPLICATE KEY UPDATE `data` = :data';
         $parameters = [
@@ -139,7 +139,7 @@ class Configurator
      */
     public function __set(string $name, $data): void
     {
-        if ($this->setToStorage($name, $data)) {
+        if ($this->saveToStorage($name, $data)) {
             $this->data[$name] = $data;
         }
     }

@@ -126,8 +126,7 @@ class Route
      */
     private function prepareRegexp(string $path): string
     {
-        $path = str_replace(['/', '-'], ['\/', '\-'], $path);
-        $path = preg_replace('/\[(.*?)\]/', '(?:$1)?', $path);
+        $path = preg_replace('/\[(.*?)\]/', '(?:$1)?', str_replace(['/', '-'], ['\/', '\-'], $path));
 
         preg_match_all('/(?:{[a-zA-Z_][a-zA-Z0-9_]+(?::[a-zA-Z]+)?})/', $path, $placeholderGroups);
 
@@ -263,8 +262,7 @@ class Route
                 $path = str_replace('{' . self::MULTI_PARAMS_PATTERN . '}', '/' . $multiParams, $path);
             }
 
-            $path = preg_replace(['/\[[^[]*?[{.*}]\]/', '/{.*?}/'], ['', ''], $path);
-            $path = str_replace(['[', ']'], ['', ''], $path);
+            $path = str_replace(['[', ']'], ['', ''], preg_replace(['/\[[^[]*?[{.*}]\]/', '/{.*?}/'], ['', ''], $path));
 
             if (!empty($query)) {
                 $path .= '?' . http_build_query($query);

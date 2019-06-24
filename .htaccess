@@ -1,4 +1,2 @@
-#SecFilterEngine Off
-#SecFilterScanPOST Off
 RewriteEngine on
 RewriteRule ^(.*) public/$1 [L]

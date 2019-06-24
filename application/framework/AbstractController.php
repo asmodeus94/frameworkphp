@@ -65,6 +65,4 @@ abstract class AbstractController
     {
         return (new Redirect($url))->setCode($code);
     }
-
-    abstract public function index();
 }

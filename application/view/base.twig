@@ -5,9 +5,14 @@
     <title>{% block title %}{{ title }}{% endblock %}</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="icon" href="{{ asset('favicon/fav.png') }}" type="image/x-icon" />
-    {% block javascript_head %}{% endblock %}
-    {% block stylesheets %}{% endblock %}
+    <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon"/>
+    {% block javascript_head %}
+        <script src="{{ asset('js/jquery-3.4.1.min.js') }}"></script>
+        <script src="{{ asset('js/bootstrap.min.js') }}"></script>
+    {% endblock %}
+    {% block stylesheets %}
+        <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
+    {% endblock %}
 </head>
 
 <body>

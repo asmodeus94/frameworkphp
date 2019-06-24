@@ -15,9 +15,9 @@ class Rule
     private $class = null;
 
     /**
-     * @var string
+     * @var string|null
      */
-    private $method = self::DEFAULT_METHOD;
+    private $method = null;
 
     /**
      * @var array
@@ -65,9 +65,9 @@ class Rule
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getMethod(): string
+    public function getMethod(): ?string
     {
         return $this->method;
     }

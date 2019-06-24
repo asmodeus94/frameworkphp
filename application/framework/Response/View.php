@@ -54,11 +54,11 @@ class View extends AbstractResponse
     private function loadFunctions(): void
     {
         $this->twig->addFunction(new TwigFunction('asset', function (?string $asset) {
-            return sprintf('/public/%s', ltrim($asset, '/'));
+            return sprintf('/%s', ltrim($asset, '/'));
         }));
 
         $this->twig->addFunction(new TwigFunction('path', function (?string $routeName, ?array $params = [], ?array $query = []) {
-            return '/' . RouteHelper::path($routeName, $params, $query);
+            return sprintf('/%s', RouteHelper::path($routeName, $params, $query));
         }));
 
         $this->twig->addFunction(new TwigFunction('url', function (string $url) {

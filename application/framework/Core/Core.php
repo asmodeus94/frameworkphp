@@ -31,14 +31,18 @@ class Core
     }
 
     /**
-     * @param string $controller
-     * @param string $method
+     * @param string|null $controller
+     * @param string|null $method
      *
      * @return bool
      * @throws \ReflectionException
      */
-    private function isCallable(string $controller, string $method): bool
+    private function isCallable(?string $controller, ?string $method): bool
     {
+        if ($controller === null || $method === null) {
+            return false;
+        }
+
         $reflection = new \ReflectionClass($controller);
         if ($reflection->isAbstract() || ($reflection->getConstructor() !== null && !$reflection->getConstructor()->isPublic())
             || !$reflection->isSubclassOf('App\AbstractController') || !$reflection->hasMethod($method)) {
@@ -51,6 +55,8 @@ class Core
     }
 
     /**
+     * Tworzy kontroler i wywołuje z niego metodę
+     *
      * @param string $class
      * @param string $method
      * @param array  $arguments
@@ -88,35 +94,33 @@ class Core
      */
     public function run(): void
     {
-        $this->route = Route::getInstance();
-        $this->route->setRequest(Request::getInstance());
-
-        [$class, $method] = $this->route->run();
-        $hasResponse = false;
-        $isError = false;
+        $hasResponse = $isError = false;
         $responseCode = null;
 
-        if ($class !== null) {
-            try {
-                if ($this->isCallable($class, $method)) {
-                    $arguments = (new Autowiring($class, $method))->analyze();
-                    $this->callController($class, $method, $arguments);
-                    $hasResponse = true;
-                }
-            } catch (\Doctrine\DBAL\DBALException | \PDOException $ex) {
-                \App\Logger\Logger::db()->addCritical($ex);
-                $isError = true;
-            } catch (\Exception $ex) {
-                $this->logger->addError($ex);
-                $isError = true;
-            } catch (\Error $er) {
-                $this->logger->addCritical($er);
-                $isError = true;
-            }
+        try {
+            $this->route = Route::getInstance();
+            $this->route->setRequest(Request::getInstance());
 
-            if ($isError) {
-                $responseCode = Code::INTERNAL_SERVER_ERROR;
+            [$class, $method] = $this->route->run();
+
+            if ($this->isCallable($class, $method)) {
+                $arguments = (new Autowiring($class, $method))->analyze();
+                $this->callController($class, $method, $arguments);
+                $hasResponse = true;
             }
+        } catch (\Doctrine\DBAL\DBALException | \PDOException $ex) {
+            \App\Logger\Logger::db()->addCritical($ex);
+            $isError = true;
+        } catch (\Exception $ex) {
+            $this->logger->addError($ex);
+            $isError = true;
+        } catch (\Error $er) {
+            $this->logger->addCritical($er);
+            $isError = true;
+        }
+
+        if ($isError) {
+            $responseCode = Code::INTERNAL_SERVER_ERROR;
         }
 
         if ($hasResponse) {

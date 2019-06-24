@@ -100,19 +100,24 @@ class Route
             $routingGroupRules = require ROUTING . $routingFile;
 
             foreach ($routingGroupRules as $routingRuleName => $routingRule) {
+                $routingGroupRuleName = $routingGroupName . '-' . $routingRuleName;
                 if (!($routingRule instanceof Rule)) {
-                    throw new \RuntimeException('$routingRule is not an instance of Rule class');
+                    throw new \RuntimeException(sprintf('$routingRule (%s) is not an instance of Rule class', $routingGroupRuleName));
                 }
 
                 if ($routingRule->getClass() === null) {
-                    throw new \RuntimeException('$routingRule\'s class was not provided');
+                    throw new \RuntimeException(sprintf('$routingRule\'s (%s) class was not provided', $routingGroupRuleName));
+                }
+
+                if ($routingRule->getMethod() === null) {
+                    throw new \RuntimeException(sprintf('$routingRule\'s (%s) method was not set', $routingGroupRuleName));
                 }
 
                 if (empty($routingRule->getPaths())) {
-                    throw new \RuntimeException('$routingRule\'s paths cannot be null');
+                    throw new \RuntimeException(sprintf('$routingRule\'s (%s) paths cannot be null', $routingGroupRuleName));
                 }
 
-                $this->rules[$routingGroupName . '-' . $routingRuleName] = $routingRule;
+                $this->rules[$routingGroupRuleName] = $routingRule;
             }
         }
     }

@@ -3,7 +3,7 @@
 namespace App\Helper;
 
 
-class Type
+class TypeHelper
 {
     /**
      * Zwraca nazwę typu zmiennej

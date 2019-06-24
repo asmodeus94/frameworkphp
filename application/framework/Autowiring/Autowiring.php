@@ -4,7 +4,7 @@ namespace App\Autowiring;
 
 
 use App\Cookie\Cookie;
-use App\Helper\Type;
+use App\Helper\TypeHelper;
 use App\Route\Route;
 
 class Autowiring
@@ -124,6 +124,7 @@ class Autowiring
     private function analyzeBuiltinParameter(\ReflectionParameter $parameter)
     {
         $type = $parameter->getType()->getName();
+        $allowsNull = $parameter->getType()->allowsNull();
         $name = $parameter->getName();
         if (($getOrPost = $this->isGetOrPost($parameter)) !== false) {
             return $getOrPost;
@@ -131,7 +132,7 @@ class Autowiring
 
         if (($parameterFromRequest = Route::getInstance()->getRequest()->getParameter($name)) !== null) {
             if ($type !== gettype($parameterFromRequest)) {
-                $parameterFromRequest = Type::cast($parameterFromRequest, $type);
+                $parameterFromRequest = TypeHelper::cast($parameterFromRequest, $type);
             }
 
             return $parameterFromRequest;
@@ -141,7 +142,7 @@ class Autowiring
             return $parameter->getDefaultValue();
         }
 
-        return null;
+        return $type === 'array' && !$allowsNull ? [] : null;
     }
 
     /**

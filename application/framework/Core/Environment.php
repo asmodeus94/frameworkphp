@@ -9,8 +9,12 @@ class Environment
 {
     public static function init()
     {
+        if (getenv('ENVIRONMENT') === 'development' || ServerHelper::isCli()) {
+            define('DEBUG', 1);
+        }
+
         self::setPaths();
-        self::setConfig();
+        self::setPhpConfig();
     }
 
     /**
@@ -29,14 +33,10 @@ class Environment
     }
 
     /**
-     * Ustawia stałe konfiguracyjne
+     * Ustawia zmienne konfiguracyjne php
      */
-    private static function setConfig()
+    private static function setPhpConfig()
     {
-        if (getenv('ENVIRONMENT') === 'development' || ServerHelper::isCli()) {
-            define('DEBUG', 1);
-        }
-
         if (defined('DEBUG')) {
             error_reporting(E_ALL);
             ini_set("display_errors", 1);

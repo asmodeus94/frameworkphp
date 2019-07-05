@@ -207,8 +207,12 @@ class Route
         if (!ServerHelper::isCli()) {
             $allowed =
                 in_array($this->request->getRequestMethod(), $rule->getAllowedHttpMethods())
-                && ($rule->isAllowedLoggedOnly() === $this->session->isLogged())
-                && (empty($assignedRoles = $rule->getAssignedRoles()) || in_array($this->session->getRole(), $assignedRoles));
+                && ($rule->isAllowedForEveryone() ||
+                    (
+                        ($rule->isAllowedLoggedOnly() === $this->session->isLogged())
+                        && (empty($assignedRoles = $rule->getAssignedRoles()) || in_array($this->session->getRole(), $assignedRoles))
+                    )
+                );
         } else {
             $allowed = $rule->isAllowedCli();
         }

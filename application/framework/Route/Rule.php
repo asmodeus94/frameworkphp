@@ -38,6 +38,11 @@ class Rule
     private $allowedLoggedOnly = false;
 
     /**
+     * @var bool
+     */
+    private $allowedForAll = false;
+
+    /**
      * @var array
      */
     private $roles = [];
@@ -236,5 +241,25 @@ class Rule
     public function isAllowedLoggedOnly(): bool
     {
         return $this->allowedLoggedOnly;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAllowedForEveryone(): bool
+    {
+        return $this->allowedForAll;
+    }
+
+    /**
+     * @param bool $allowedForAll
+     *
+     * @return $this
+     */
+    public function setAllowedForEveryone(bool $allowedForAll = true): Rule
+    {
+        $this->allowedForAll = $allowedForAll;
+
+        return $this;
     }
 }

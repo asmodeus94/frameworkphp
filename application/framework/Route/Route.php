@@ -5,6 +5,7 @@ namespace App\Route;
 
 use App\Helper\ServerHelper;
 use App\Request;
+use App\Session;
 
 class Route
 {
@@ -22,6 +23,11 @@ class Route
      * @var Request
      */
     private $request;
+
+    /**
+     * @var Session
+     */
+    private $session;
 
     /**
      * Pasująca nazwa routingu
@@ -65,6 +71,18 @@ class Route
     public function setRequest(Request $request): Route
     {
         $this->request = $request;
+
+        return $this;
+    }
+
+    /**
+     * @param Session $session
+     *
+     * @return Route
+     */
+    public function setSession(Session $session): Route
+    {
+        $this->session = $session;
 
         return $this;
     }
@@ -178,21 +196,35 @@ class Route
     }
 
     /**
+     * Sprawdza czy możliwe jest skorzystanie z podanej reguły
+     *
+     * @param Rule $rule
+     *
+     * @return bool
+     */
+    private function isAllowed(Rule $rule): bool
+    {
+        if (!ServerHelper::isCli()) {
+            $allowed =
+                in_array($this->request->getRequestMethod(), $rule->getAllowedHttpMethods())
+                && ($rule->isAllowedLoggedOnly() === $this->session->isLogged())
+                && (empty($assignedRoles = $rule->getAssignedRoles()) || in_array($this->session->getRole(), $assignedRoles));
+        } else {
+            $allowed = $rule->isAllowedCli();
+        }
+
+        return $allowed;
+    }
+
+    /**
      * Na podstawie przekazanej przez użytkownika ścieżki dobiera odpowiedni routing
      *
      * @return string|null Nazwa routingu lub null w przypadku niepowodzenia
      */
     private function analyzePath(): ?string
     {
-        $isCli = ServerHelper::isCli();
         foreach ($this->rules as $routingRuleName => $routingRule) {
-            if (!$isCli) {
-                $notAllowed = !in_array($this->request->getRequestMethod(), $routingRule->getAllowedHttpMethods());
-            } else {
-                $notAllowed = !$routingRule->isAllowedCli();
-            }
-
-            if ($notAllowed) {
+            if (!$this->isAllowed($routingRule)) {
                 continue;
             }
 

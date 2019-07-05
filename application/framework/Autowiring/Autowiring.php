@@ -230,14 +230,13 @@ class Autowiring
 
     /**
      * Tworzy obiekt podanego typu, a w przypadku typów interfejsowych korzysta z reguł wiązania interfejsów
-     * z odpowiednimi klasamia w zależności od klasy w której zachodzi wiązanie
+     * z odpowiednimi klasami w zależności od klasy w której zachodzi wiązanie
      *
      * @param string      $className Nazwa klasy której obiekt należy utworzyć
      * @param string|null $invoker   Nazwa klasy agregującej obiekt
      *
      * @return object
      * @throws \ReflectionException|\RuntimeException
-     * @see Autowiring::loadRulesForInterfaces()
      */
     private function makeInstance(string $className, ?string $invoker = null): object
     {

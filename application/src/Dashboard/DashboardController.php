@@ -23,7 +23,7 @@ class DashboardController extends AbstractController
 
     public function index()
     {
-        return $this->redirect(RouteHelper::path('basic-test2', ['title' => 'smthing']));
+        return $this->redirect(RouteHelper::path('dashboard-test2', ['title' => 'smthing']));
     }
 
     public function test(string $title, Configurator $configurator, DB $db)

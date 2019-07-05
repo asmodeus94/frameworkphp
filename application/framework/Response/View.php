@@ -58,7 +58,7 @@ class View extends AbstractResponse
         }));
 
         $this->twig->addFunction(new TwigFunction('path', function (?string $routeName, ?array $params = [], ?array $query = []) {
-            return sprintf('/%s', RouteHelper::path($routeName, $params, $query));
+            return RouteHelper::path($routeName, $params, $query);
         }));
 
         $this->twig->addFunction(new TwigFunction('url', function (string $url) {

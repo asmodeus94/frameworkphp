@@ -7,11 +7,28 @@ use App\Helper\ServerHelper;
 
 class Session
 {
-    public function __construct()
+    /**
+     * @var Session
+     */
+    private static $instance = null;
+
+    private function __construct()
     {
         if (!isset($_SESSION) && session_id() === '' && !ServerHelper::isCli()) {
             session_start();
         }
+    }
+
+    /**
+     * @return Session
+     */
+    public static function getInstance()
+    {
+        if (!isset(self::$instance)) {
+            self::$instance = new Session();
+        }
+
+        return self::$instance;
     }
 
     /**
@@ -74,6 +91,52 @@ class Session
     public function remove(string $index): void
     {
         unset($_SESSION[$index]);
+    }
+
+    /**
+     * Czy użytkownik jest zalogowany
+     *
+     * @return bool
+     */
+    public function isLogged(): bool
+    {
+        return $this->get('logged') == 1;
+    }
+
+    /**
+     * Ustawia flagę oznaczjącą zalogowanego użytkownika
+     *
+     * @return $this
+     */
+    public function setLogged(): Session
+    {
+        $this->set('logged', 1);
+
+        return $this;
+    }
+
+    /**
+     * Zwraca nazwę konta użytkownika
+     *
+     * @return string|null
+     */
+    public function getRole(): ?string
+    {
+        return $this->get('role');
+    }
+
+    /**
+     * Ustawia nazwę konta użytkownika
+     *
+     * @param string $role
+     *
+     * @return $this
+     */
+    public function setRole(string $role): Session
+    {
+        $this->set('role', $role);
+
+        return $this;
     }
 
     /**

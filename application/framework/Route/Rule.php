@@ -7,8 +7,6 @@ use App\Request;
 
 class Rule
 {
-    const DEFAULT_METHOD = 'index';
-
     /**
      * @var string|null
      */
@@ -33,6 +31,16 @@ class Rule
      * @var bool
      */
     private $allowedCli = false;
+
+    /**
+     * @var bool
+     */
+    private $allowedLoggedOnly = false;
+
+    /**
+     * @var array
+     */
+    private $roles = [];
 
     /**
      * Rule constructor.
@@ -161,12 +169,72 @@ class Rule
     /**
      * @param bool $allowedCli
      *
-     * @return Rule
+     * @return $this
      */
-    public function allowedCli(bool $allowedCli): Rule
+    public function allowedCli(bool $allowedCli = true): Rule
     {
         $this->allowedCli = $allowedCli;
 
         return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function allowedOnlyCli(): Rule
+    {
+        return $this->setAllowedHttpMethods([])->allowedCli();
+    }
+
+    /**
+     * @param array $roles
+     *
+     * @return $this
+     */
+    public function setAssignedRoles(array $roles): Rule
+    {
+        $this->roles = $roles;
+
+        return $this->allowedLoggedOnly();
+    }
+
+    /**
+     * @param string $role
+     *
+     * @return $this
+     */
+    public function setAssignedRole(string $role): Rule
+    {
+        $this->roles[] = $role;
+
+        return $this->allowedLoggedOnly();
+    }
+
+    /**
+     * @return array
+     */
+    public function getAssignedRoles(): array
+    {
+        return $this->roles;
+    }
+
+    /**
+     * @param bool $allowedLoggedOnly
+     *
+     * @return $this
+     */
+    public function allowedLoggedOnly(bool $allowedLoggedOnly = true): Rule
+    {
+        $this->allowedLoggedOnly = $allowedLoggedOnly;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAllowedLoggedOnly(): bool
+    {
+        return $this->allowedLoggedOnly;
     }
 }

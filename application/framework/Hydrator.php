@@ -3,20 +3,25 @@
 namespace App;
 
 
-use Zend\Hydrator\NamingStrategy\UnderscoreNamingStrategy;
-use Zend\Hydrator\ObjectPropertyHydrator;
+use Zend\Hydrator\ClassMethodsHydrator;
+use Zend\Hydrator\Strategy\BooleanStrategy;
 
 class Hydrator
 {
     /**
-     * @var ObjectPropertyHydrator
+     * Mapowanie wartości logicznych (true/false) na ich odpowiedniki w bazie danych
+     */
+    private const TRUE_VALUE_STRING = 'y';
+    private const FALSE_VALUE_STRING = 'n';
+
+    /**
+     * @var ClassMethodsHydrator
      */
     private $hydrator;
 
     public function __construct()
     {
-        $this->hydrator = new ObjectPropertyHydrator();
-        $this->hydrator->setNamingStrategy(new UnderscoreNamingStrategy());
+        $this->hydrator = new ClassMethodsHydrator();
     }
 
     /**
@@ -26,7 +31,7 @@ class Hydrator
      * @param array  $data
      * @param object $object
      *
-     * @return object|object[]
+     * @return mixed
      */
     public function hydrate(array $data, object $object)
     {
@@ -67,5 +72,30 @@ class Hydrator
         }
 
         return $object;
+    }
+
+    /**
+     * Oznacza wybrane właściwości obiektu jako typ logiczny wymagający przemapowania
+     *
+     * @param string|string[] $names
+     *
+     * @return Hydrator
+     */
+    public function markBooleanValue($names): Hydrator
+    {
+        if (!is_array($names)) {
+            $names = [$names];
+        }
+
+        foreach ($names as $name) {
+            foreach (['has', 'is', ''] as $method) {
+                $this->hydrator->addStrategy(
+                    ($method !== '' ? $method . ucfirst($name) : $name),
+                    new BooleanStrategy(self::TRUE_VALUE_STRING, self::FALSE_VALUE_STRING)
+                );
+            }
+        }
+
+        return $this;
     }
 }

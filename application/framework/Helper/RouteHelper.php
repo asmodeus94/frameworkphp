@@ -22,6 +22,6 @@ class RouteHelper
             return '';
         }
 
-        return ($path = Route::getInstance()->makePath($routeName, $params, $query)) !== null ? $path : '';
+        return ($path = Route::getInstance()->makePath($routeName, $params, $query)) !== null ? '/' . $path : '';
     }
 }

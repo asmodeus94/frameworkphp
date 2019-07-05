@@ -10,6 +10,7 @@ use App\Response\AbstractResponse;
 use App\Response\Code;
 use App\Route\Route;
 use App\Autowiring\Autowiring;
+use App\Session;
 use Monolog\Logger;
 
 class Core
@@ -61,7 +62,7 @@ class Core
      * @param string $method
      * @param array  $arguments
      *
-     * @throws \RuntimeException|\Error|\ReflectionException
+     * @throws \Exception|\Error
      */
     private function callController(string $class, string $method, array $arguments)
     {
@@ -98,8 +99,9 @@ class Core
         $responseCode = null;
 
         try {
-            $this->route = Route::getInstance();
-            $this->route->setRequest(Request::getInstance());
+            $this->route = Route::getInstance()
+                ->setRequest(Request::getInstance())
+                ->setSession(Session::getInstance());
 
             [$class, $method] = $this->route->run();
 

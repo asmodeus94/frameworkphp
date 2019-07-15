@@ -21,7 +21,7 @@ class Hydrator
 
     public function __construct()
     {
-        $this->hydrator = new ClassMethodsHydrator();
+        $this->hydrator = new ClassMethodsHydrator(false);
     }
 
     /**

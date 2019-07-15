@@ -6,7 +6,8 @@
         "doctrine/dbal": "^2.9",
         "symfony/filesystem": "^4.3",
         "zendframework/zend-hydrator": "^3.0",
-        "monolog/monolog": "^1.24"
+        "monolog/monolog": "^1.24",
+        "ext-openssl": "*"
     },
     "autoload": {
         "psr-4": {

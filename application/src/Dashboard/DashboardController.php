@@ -8,6 +8,7 @@ use App\Config\Configurator;
 use App\DB;
 use App\Helper\RouteHelper;
 use App\Response\View;
+use App\Security\Csrf;
 
 class DashboardController extends AbstractController
 {
@@ -16,9 +17,12 @@ class DashboardController extends AbstractController
      */
     private $db;
 
-    public function __construct(\App\DB $db)
+    private $csrf;
+
+    public function __construct(\App\DB $db, Csrf $csrf)
     {
         $this->db = $db;
+        $this->csrf = $csrf;
     }
 
     public function index()
@@ -28,6 +32,8 @@ class DashboardController extends AbstractController
 
     public function test(string $title, Configurator $configurator, DB $db)
     {
+        $this->csrf->checkToken();
+
         $params = [
             'title' => $title,
             'multiParams' => [

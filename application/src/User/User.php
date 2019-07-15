@@ -56,13 +56,14 @@ class User
     public function setId(int $id): User
     {
         $this->id = $id;
+
         return $this;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getLogin(): string
+    public function getLogin(): ?string
     {
         return $this->login;
     }
@@ -75,13 +76,14 @@ class User
     public function setLogin(string $login): User
     {
         $this->login = $login;
+
         return $this;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getNick(): string
+    public function getNick(): ?string
     {
         return $this->nick;
     }
@@ -94,13 +96,14 @@ class User
     public function setNick(string $nick): User
     {
         $this->nick = $nick;
+
         return $this;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getPassword(): string
+    public function getPassword(): ?string
     {
         return $this->password;
     }
@@ -113,13 +116,14 @@ class User
     public function setPassword(string $password): User
     {
         $this->password = password_hash($password, PASSWORD_BCRYPT);
+
         return $this;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getEmail(): string
+    public function getEmail(): ?string
     {
         return $this->email;
     }
@@ -132,6 +136,7 @@ class User
     public function setEmail(string $email): User
     {
         $this->email = $email;
+
         return $this;
     }
 
@@ -151,6 +156,7 @@ class User
     public function setLastSessionId(string $lastSessionId): User
     {
         $this->lastSessionId = $lastSessionId;
+
         return $this;
     }
 
@@ -170,6 +176,7 @@ class User
     public function setLastActivity(string $lastActivity): User
     {
         $this->lastActivity = $lastActivity;
+
         return $this;
     }
 }

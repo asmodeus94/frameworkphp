@@ -19,4 +19,7 @@ class Statuses
 
     const ERROR_NICK_ILLEGAL_CHARACTERS = 256;
     const ERROR_NICK_LENGTH = 512;
+
+    const ERROR_LOGIN_ALREADY_EXISTS = 1024;
+    const ERROR_NICK_ALREADY_EXISTS = 2048;
 }

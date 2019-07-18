@@ -9,25 +9,68 @@ use App\Session;
 
 class Csrf
 {
-    private const TOKEN_NAME = 'token';
+    const TOKEN_NAME = 'token';
 
+    /**
+     * @var Session
+     */
     private $session;
 
-    public function __construct(Session $session)
+    /**
+     * @var Request
+     */
+    private $request;
+
+    /**
+     * Csrf constructor.
+     *
+     * @param Session $session
+     * @param Request $request
+     */
+    public function __construct(Session $session, Request $request)
     {
         $this->session = $session;
+        $this->request = $request;
     }
 
     /**
-     * Sprawdza token CSRF, a w przypadku jego braku lub niezgoności z tym zapisanym w sesji przekierowuje na stronę
+     * Sprawdza token CSRF, a w przypadku jego braku lub niezgodności z tym zapisanym w sesji przekierowuje na stronę
      * główną
      */
     public function checkToken(): void
     {
-        if (Request::getInstance()->getParameter(self::TOKEN_NAME) === $this->session->get(self::TOKEN_NAME)) {
+        $tokenFromSession = $this->session->get(self::TOKEN_NAME);
+        if ($tokenFromSession !== null && $this->request->getParameter(self::TOKEN_NAME) === $tokenFromSession) {
             return;
         }
 
         (new Redirect('/'))->make();
+    }
+
+    /**
+     * Zapisuje token w sesji
+     *
+     * @param string $token
+     */
+    private function saveInSession(string $token): void
+    {
+        $this->session->set(self::TOKEN_NAME, $token);
+    }
+
+    /**
+     * Pobiera token, a w przypadku jego braku tworzy go i zapisuje w sesji
+     *
+     * @return string
+     */
+    public function getToken(): string
+    {
+        if (($token = $this->session->get(self::TOKEN_NAME)) !== null) {
+            return $token;
+        }
+
+        $token = CryptographyHelper::hash(CryptographyHelper::getRandomBytes());
+        $this->saveInSession($token);
+
+        return $token;
     }
 }

@@ -116,6 +116,26 @@ class UserRepository
     }
 
     /**
+     * @param User $user
+     *
+     * @return bool
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function isUserExists(User $user): bool
+    {
+        $parameters = $this->hydrator->extract($user);
+        if ($this->db->getValue('SELECT 1 FROM `users` WHERE `login` = :login LIMIT 1', $parameters) !== false) {
+            $this->setStatus(Statuses::ERROR_LOGIN_ALREADY_EXISTS);
+        } elseif ($this->db->getValue('SELECT 1 FROM `users` WHERE `nick` = :nick LIMIT 1', $parameters) !== false) {
+            $this->setStatus(Statuses::ERROR_NICK_ALREADY_EXISTS);
+        } else {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * @param array $user
      *
      * @return User|null
@@ -128,9 +148,15 @@ class UserRepository
         }
 
         $user = $this->fromArray($user);
-        if (!$this->checkEmail($user->getEmail()) || !$this->checkLogin($user->getLogin()) || !$this->checkNick($user->getLogin())) {
+        if (
+            !$this->checkEmail($user->getEmail())
+            || !$this->checkLogin($user->getLogin())
+            || !$this->checkNick($user->getLogin())
+            || $this->isUserExists($user)
+        ) {
             return null;
         }
+
 
         $this->setStatus(Statuses::SUCCESS);
 

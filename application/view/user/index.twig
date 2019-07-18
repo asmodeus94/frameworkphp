@@ -8,7 +8,7 @@
                 <div class="card card-body">
                     {{ print_messages(message) }}
                     <h3 class="text-center mb-4">User creator</h3>
-                    <form action="{{ path('user-add') }}" method="post">
+                    <form action="{{ pathWithToken('user-add') }}" method="post">
                         <fieldset>
                             <div class="form-group">
                                 <input class="form-control input-lg" placeholder="Login" name="user[login]" type="text" value="{{ user.login }}">

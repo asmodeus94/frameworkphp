@@ -32,8 +32,6 @@ class DashboardController extends AbstractController
 
     public function test(string $title, Configurator $configurator, DB $db)
     {
-        $this->csrf->checkToken();
-
         $params = [
             'title' => $title,
             'multiParams' => [

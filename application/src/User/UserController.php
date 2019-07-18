@@ -7,11 +7,22 @@ use App\AbstractController;
 use App\Helper\BitMaskHelper;
 use App\Helper\RouteHelper;
 use App\Response\View;
+use App\Security\Csrf;
 use User\UserRepository\Statuses;
 use View\Message;
 
 class UserController extends AbstractController
 {
+    /**
+     * @var Csrf
+     */
+    private $csrf;
+
+    public function __construct(Csrf $csrf)
+    {
+        $this->csrf = $csrf;
+    }
+
     public function index(array $user, ?int $statusCode)
     {
         $message = $this->getMessage($statusCode);
@@ -48,6 +59,8 @@ class UserController extends AbstractController
                 Statuses::ERROR_LOGIN_LENGTH => 'Nieprawidłowa długość loginu',
                 Statuses::ERROR_NICK_ILLEGAL_CHARACTERS => 'Nick powinien składać się ze znaków z alfabetu łacinskiego, cyfr lub znaków _ oraz -',
                 Statuses::ERROR_NICK_LENGTH => 'Nieprawidłowa długość nicku',
+                Statuses::ERROR_LOGIN_ALREADY_EXISTS => 'Użytkownik o takim loginie już istnieje',
+                Statuses::ERROR_NICK_ALREADY_EXISTS => 'Użytkownik o takim nicku już istnieje',
             ];
 
             foreach ($txt as $errorCode => $msg) {
@@ -56,9 +69,7 @@ class UserController extends AbstractController
                     break;
                 }
             }
-        }
 
-        if ($message->getType() === null) {
             $message->setType(Message::TYPE_ERROR);
         }
 
@@ -67,8 +78,10 @@ class UserController extends AbstractController
 
     public function addUser(array $user, UserRepository $userManagement)
     {
+        $this->csrf->checkToken();
         $userManagement->add($user);
-        unset($user['password']);
+
+        unset($user['password'], $user['password2']);
 
         return $this->redirect(RouteHelper::path('user-index', [], ['user' => $user, 'statusCode' => $userManagement->getStatus()]));
     }

@@ -4,6 +4,9 @@ namespace App\Response;
 
 
 use App\Helper\RouteHelper;
+use App\Request;
+use App\Security\Csrf;
+use App\Session;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 use Twig\TwigFunction;
@@ -60,6 +63,14 @@ class View extends AbstractResponse
         $this->twig->addFunction(new TwigFunction('path', function (?string $routeName, ?array $params = [], ?array $query = []) {
             return RouteHelper::path($routeName, $params, $query);
         }));
+
+        $csrf = new Csrf(Session::getInstance(), Request::getInstance());
+        $this->twig->addFunction(new TwigFunction('pathWithToken', function (?string $routeName, ?array $params = [], ?array $query = []) use ($csrf) {
+            $query[Csrf::TOKEN_NAME] = $csrf->getToken();
+
+            return RouteHelper::path($routeName, $params, $query);
+        }));
+
 
         $this->twig->addFunction(new TwigFunction('url', function (string $url) {
             return filter_var($url, FILTER_VALIDATE_URL) !== false ? $url : '';

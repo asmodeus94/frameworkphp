@@ -25,12 +25,12 @@ class UserController extends AbstractController
 
     public function index(array $user, ?int $statusCode)
     {
-        $message = $this->getMessage($statusCode);
+        $alert = $this->getMessage($statusCode);
 
         $variables = [
             'title' => 'User creator',
             'user' => $user,
-            'message' => $message,
+            'alert' => $alert,
         ];
 
         return $this->response(new View('user/index.twig', $variables));

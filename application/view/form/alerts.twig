@@ -1,0 +1,24 @@
+{% macro print_alerts(alerts) %}
+    {% if alerts is iterable %}
+        {% for alert in alerts %}
+            {{ _self.print_alert(alert) }}
+        {% endfor %}
+    {% else %}
+        {{ _self.print_alert(alerts) }}
+    {% endif %}
+{% endmacro %}
+
+{% macro print_alert(alert) %}
+    {% if alert.content %}
+        {% set content=alert.content %}
+        {% if alert.type == constant('View\\Message::TYPE_SUCCESS') %}
+            {% set type='success' %}
+        {% elseif alert.type == constant('View\\Message::TYPE_ERROR') %}
+            {% set type='danger' %}
+        {% endif %}
+
+        <div class="alert alert-{{ type ? type : 'info' }}">
+            {{ content }}
+        </div>
+    {% endif %}
+{% endmacro %}

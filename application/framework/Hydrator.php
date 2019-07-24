@@ -11,8 +11,8 @@ class Hydrator
     /**
      * Mapowanie wartości logicznych (true/false) na ich odpowiedniki w bazie danych
      */
-    private const TRUE_VALUE_STRING = 'y';
-    private const FALSE_VALUE_STRING = 'n';
+    const TRUE_VALUE_STRING = 'y';
+    const FALSE_VALUE_STRING = 'n';
 
     /**
      * @var ClassMethodsHydrator

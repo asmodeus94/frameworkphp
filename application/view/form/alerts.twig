@@ -9,16 +9,16 @@
 {% endmacro %}
 
 {% macro print_alert(alert) %}
-    {% if alert.content %}
-        {% set content=alert.content %}
-        {% if alert.type == constant('View\\Message::TYPE_SUCCESS') %}
+    {% if alert.message %}
+        {% set message=alert.message %}
+        {% if alert.type == constant('View\\Alerts\\Type::SUCCESS') %}
             {% set type='success' %}
-        {% elseif alert.type == constant('View\\Message::TYPE_ERROR') %}
+        {% elseif alert.type == constant('View\\Alerts\\Type::ERROR') %}
             {% set type='danger' %}
         {% endif %}
 
         <div class="alert alert-{{ type ? type : 'info' }}">
-            {{ content }}
+            {{ message }}
         </div>
     {% endif %}
 {% endmacro %}

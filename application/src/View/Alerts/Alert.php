@@ -1,29 +1,26 @@
 <?php
 
-namespace View;
+namespace View\Alerts;
 
 
-class Message
+class Alert
 {
     /**
      * @var string
      */
-    private $content;
+    private $message;
 
     /**
      * @var int
      */
     private $type;
 
-    const TYPE_SUCCESS = 1;
-    const TYPE_ERROR = 2;
-
     /**
      * @return string|null
      */
-    public function getContent(): ?string
+    public function getMessage(): ?string
     {
-        return $this->content;
+        return $this->message;
     }
 
     /**
@@ -31,9 +28,9 @@ class Message
      *
      * @return $this
      */
-    public function setContent(string $content): Message
+    public function setMessage(string $content): Alert
     {
-        $this->content = $content;
+        $this->message = $content;
 
         return $this;
     }
@@ -51,7 +48,7 @@ class Message
      *
      * @return $this
      */
-    public function setType(int $type): Message
+    public function setType(int $type): Alert
     {
         $this->type = $type;
 

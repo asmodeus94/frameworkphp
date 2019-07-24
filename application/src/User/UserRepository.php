@@ -4,6 +4,7 @@ namespace User;
 
 
 use App\DB;
+use App\Helper\ArrayHelper;
 use App\Helper\Traits\StatusTrait;
 use App\Hydrator;
 use User\UserRepository\Statuses;
@@ -59,16 +60,18 @@ class UserRepository
 
         $passwordLength = mb_strlen($password);
         if ($passwordLength < self::PASSWORD_LENGTH_MIN || $passwordLength > self::PASSWORD_LENGTH_MAX) {
-            $this->setStatus(Statuses::ERROR_PASSWORD_LENGTH);
-        } elseif ((bool)preg_match('/[\s]+/', $password)) {
-            $this->setStatus(Statuses::ERROR_PASSWORD_WHITESPACES);
-        } elseif ((int)preg_match_all('/[0-9]|[' . addslashes(self::PASSWORD_SPECIAL_CHARS) . ']/', $password) < self::PASSWORD_MIN_NUMBER_OF_SPECIAL_CHARS) {
-            $this->setStatus(Statuses::ERROR_PASSWORD_WEAK);
-        } else {
-            return true;
+            $this->appendStatus(Statuses::ERROR_PASSWORD_LENGTH);
         }
 
-        return false;
+        if ((bool)preg_match('/[\s]+/', $password)) {
+            $this->appendStatus(Statuses::ERROR_PASSWORD_WHITESPACES);
+        }
+
+        if ((int)preg_match_all('/[0-9]|[' . addslashes(self::PASSWORD_SPECIAL_CHARS) . ']/', $password) < self::PASSWORD_MIN_NUMBER_OF_SPECIAL_CHARS) {
+            $this->appendStatus(Statuses::ERROR_PASSWORD_WEAK);
+        }
+
+        return $this->getStatus() === 0;
     }
 
     /**
@@ -143,7 +146,13 @@ class UserRepository
      */
     public function add($user): ?User
     {
-        if (!$this->checkPassword($user['password'] ?? '', $user['password2'] ?? '')) {
+        if (!ArrayHelper::areFieldsFilled($user, ['login', 'nick', 'email','password', 'password2'])) {
+            $this->setStatus(Statuses::ERROR_EMPTY_FIELDS);
+
+            return null;
+        }
+
+        if (!$this->checkPassword($user['password'], $user['password2'])) {
             return null;
         }
 
@@ -156,7 +165,6 @@ class UserRepository
         ) {
             return null;
         }
-
 
         $this->setStatus(Statuses::SUCCESS);
 

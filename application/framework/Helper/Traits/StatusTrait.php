@@ -39,6 +39,6 @@ trait StatusTrait
      */
     public function getStatus(): int
     {
-        return $this->status;
+        return $this->status ?? 0;
     }
 }

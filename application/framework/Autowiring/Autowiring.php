@@ -5,6 +5,7 @@ namespace App\Autowiring;
 
 use App\Cookie\Cookie;
 use App\Helper\TypeHelper;
+use App\Hydrator;
 use App\Route\Route;
 
 class Autowiring
@@ -123,26 +124,40 @@ class Autowiring
      */
     private function analyzeBuiltinParameter(\ReflectionParameter $parameter)
     {
-        $type = $parameter->getType()->getName();
-        $allowsNull = $parameter->getType()->allowsNull();
-        $name = $parameter->getName();
         if (($getOrPost = $this->isGetOrPost($parameter)) !== false) {
             return $getOrPost;
         }
 
-        if (($parameterFromRequest = Route::getInstance()->getRequest()->getParameter($name)) !== null) {
-            if ($type !== gettype($parameterFromRequest)) {
-                $parameterFromRequest = TypeHelper::cast($parameterFromRequest, $type);
-            }
+        $type = $parameter->getType()->getName();
 
-            return $parameterFromRequest;
+        if (($parameterFromRequest = Route::getInstance()->getRequest()->getParameter($parameter->getName())) !== null) {
+            if ($type === 'bool'
+                && ($parameterFromRequest === Hydrator::TRUE_VALUE_STRING || $parameterFromRequest === Hydrator::FALSE_VALUE_STRING)) {
+                return $parameterFromRequest === Hydrator::TRUE_VALUE_STRING;
+            } elseif ($type === gettype($parameterFromRequest)) {
+                return $parameterFromRequest;
+            } else {
+                return TypeHelper::cast($parameterFromRequest, $type);
+            }
         }
 
         if ($parameter->isDefaultValueAvailable()) {
             return $parameter->getDefaultValue();
         }
 
-        return $type === 'array' && !$allowsNull ? [] : null;
+        if (!$parameter->getType()->allowsNull()) {
+            if ($type === 'int' || $type === 'float') {
+                return 0;
+            } elseif ($type === 'bool') {
+                return false;
+            } elseif ($type === 'array') {
+                return [];
+            } elseif ($type === 'string') {
+                return '';
+            }
+        }
+
+        return null;
     }
 
     /**

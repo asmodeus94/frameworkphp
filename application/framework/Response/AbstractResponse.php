@@ -39,5 +39,5 @@ abstract class AbstractResponse
         return $this;
     }
 
-    public abstract function send(): string;
+    public abstract function send();
 }

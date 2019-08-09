@@ -22,5 +22,7 @@ class Type
     const TEXT_PLAIN = 'text/plain';
     const TEXT_XML = 'text/xml';
 
+    const VIDEO_MP4 = 'video/mp4';
+
     const DEFAULT_TYPE = self::TEXT_HTML;
 }

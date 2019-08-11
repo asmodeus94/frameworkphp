@@ -69,6 +69,8 @@ class File extends AbstractResponse
         $this->start = 0;
         $this->end = $this->size - 1;
 
+        header('Content-Disposition: attachment; filename="' . basename($filepath) . '"');
+
         if (is_string($contentType)) {
             $this->setContentType($contentType);
         }

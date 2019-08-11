@@ -15,6 +15,7 @@ class Type
     const APPLICATION_JSON = 'application/json';
     const APPLICATION_XML = 'application/xml';
     const APPLICATION_ZIP = 'application/zip';
+    const APPLICATION_SQL = 'application/sql';
 
     const TEXT_CSS = 'text/css';
     const TEXT_CSV = 'text/csv';

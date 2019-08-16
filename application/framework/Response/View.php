@@ -49,6 +49,8 @@ class View extends AbstractResponse
         } else {
             $this->setLayout();
         }
+
+        $this->setContentType();
     }
 
     /**

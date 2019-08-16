@@ -8,8 +8,7 @@ use App\Redirect;
 use App\Request;
 use App\Response\AbstractResponse;
 use App\Response\Code;
-use App\Response\File;
-use App\Response\Stream;
+use App\Response\DownloadableInterface;
 use App\Route\Route;
 use App\Autowiring\Autowiring;
 use App\Session;
@@ -79,19 +78,19 @@ class Core
             $response = $controller->{$method}();
         }
 
-        if (!($response instanceof AbstractResponse) && !($response instanceof Redirect)) {
+        $instanceOfAbstractResponse = $response instanceof AbstractResponse;
+        $instanceOfRedirect = $response instanceof Redirect;
+        if (!$instanceOfAbstractResponse && !$instanceOfRedirect) {
             throw new \RuntimeException('Response is not an instance of AbstractResponse/Redirect class');
         }
 
-        if ($response instanceof AbstractResponse) {
-            if (!($response instanceof File) && !($response instanceof Stream)) {
+        if ($instanceOfAbstractResponse) {
+            if (!($response instanceof DownloadableInterface)) {
                 echo $response->send();
             } else {
                 $response->send();
             }
-        }
-
-        if ($response instanceof Redirect) {
+        } elseif ($instanceOfRedirect) {
             $response->make();
         }
     }

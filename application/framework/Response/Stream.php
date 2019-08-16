@@ -3,7 +3,7 @@
 namespace App\Response;
 
 
-class Stream extends AbstractResponse
+class Stream extends AbstractResponse implements DownloadableInterface
 {
     /**
      * @var \Generator
@@ -15,7 +15,7 @@ class Stream extends AbstractResponse
      */
     private const DEFAULT_BANDWIDTH = 1024 * 1024;
 
-    public function __construct(string $filename, \Generator $streamGenerator, string $contentType = null)
+    public function __construct(string $filename, \Generator $streamGenerator, ?string $contentType = null)
     {
         header('Content-Disposition: attachment; filename="' . $filename . '"');
 
@@ -23,6 +23,8 @@ class Stream extends AbstractResponse
 
         if (is_string($contentType)) {
             $this->setContentType($contentType);
+        } else {
+            $this->setContentType(Type::APPLICATION_OCTET_STREAM);
         }
     }
 

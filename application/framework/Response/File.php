@@ -3,7 +3,7 @@
 namespace App\Response;
 
 
-class File extends AbstractResponse
+class File extends AbstractResponse implements DownloadableInterface
 {
     /**
      * @var resource
@@ -50,6 +50,8 @@ class File extends AbstractResponse
      */
     private const DEFAULT_BANDWIDTH = 1024 * 1024;
 
+    const BANDWIDTH_NO_LIMIT = -1;
+
     /**
      * Maksymalna przepustowość pobierania
      *
@@ -57,7 +59,10 @@ class File extends AbstractResponse
      */
     private $bandwidth = self::DEFAULT_BANDWIDTH;
 
-    public function __construct(string $filepath, ?string $contentType = null)
+    const CONTEXT_INLINE = 'inline';
+    const CONTEXT_ATTACHMENT = 'attachment';
+
+    public function __construct(string $filepath, ?string $contentType = null, string $context = self::CONTEXT_INLINE)
     {
         if (!file_exists($filepath)) {
             throw new \RuntimeException(sprintf('File %s doesn\'t exist', basename($filepath)));
@@ -69,10 +74,13 @@ class File extends AbstractResponse
         $this->start = 0;
         $this->end = $this->size - 1;
 
-        header('Content-Disposition: attachment; filename="' . basename($filepath) . '"');
+        $context = in_array($context, [self::CONTEXT_INLINE, self::CONTEXT_ATTACHMENT]) ? $context : self::CONTEXT_INLINE;
+        header('Content-Disposition: ' . $context . '; filename="' . basename($filepath) . '"');
 
         if (is_string($contentType)) {
             $this->setContentType($contentType);
+        } else {
+            $this->setContentType(Type::APPLICATION_OCTET_STREAM);
         }
 
         header('Accept-Ranges: bytes');
@@ -112,7 +120,7 @@ class File extends AbstractResponse
         $this->end = $cursorEnd;
         $this->length = $this->end - $this->start + 1;
         fseek($this->file, $this->start);
-        header('HTTP/1.1 206 Partial Content');
+        $this->setCode(Code::PARTIAL_CONTENT);
     }
 
     /**
@@ -122,18 +130,18 @@ class File extends AbstractResponse
     {
         $this->sendFile = false;
 
-        header('HTTP/1.1 416 Requested Range Not Satisfiable');
+        $this->setCode(Code::RANGE_NOT_SATISFIABLE);
         header("Content-Range: bytes $this->start-$this->end/$this->size");
     }
 
     /**
      * Ustawia przepustowość wyr. w bajtach
      *
-     * @param int|null $bandwidth
+     * @param int $bandwidth
      *
      * @return $this
      */
-    public function setBandwidth(?int $bandwidth = null): File
+    public function setBandwidth(int $bandwidth = self::BANDWIDTH_NO_LIMIT): File
     {
         $this->bandwidth = $bandwidth;
 
@@ -152,7 +160,7 @@ class File extends AbstractResponse
         header("Content-Range: bytes $this->start-$this->end/$this->size");
         header("Content-Length: " . $this->length);
 
-        if ($noLimit = ($this->bandwidth === null)) {
+        if ($noLimit = ($this->bandwidth === self::BANDWIDTH_NO_LIMIT)) {
             $buffer = self::DEFAULT_BANDWIDTH;
         } else {
             $buffer = $this->bandwidth;

@@ -4,32 +4,32 @@ namespace App;
 
 
 use App\Response\Code;
+use App\Response\DownloadableInterface;
 use App\Response\Json;
 use App\Response\AbstractResponse;
 use App\Response\Type;
-use App\Response\View;
 
 abstract class AbstractController
 {
     /**
      * Przygotowuje obiekt odpowiedzi
      *
-     * @param View|array $response
-     * @param int        $code
+     * @param AbstractResponse|array $response
+     * @param int                    $code
      *
      * @return AbstractResponse
      */
     protected function response($response = [], int $code = Code::OK): AbstractResponse
     {
-        if ($response instanceof View) {
-            $response->setContentType();
-        } else {
+        if (is_array($response)) {
             $response = new Json($response);
             $response->encode();
             $response->setContentType(Type::APPLICATION_JSON);
         }
 
-        $response->setCode($code);
+        if (!($response instanceof DownloadableInterface)) {
+            $response->setCode($code);
+        }
 
         return $response;
     }

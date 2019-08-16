@@ -9,6 +9,7 @@ use App\Request;
 use App\Response\AbstractResponse;
 use App\Response\Code;
 use App\Response\File;
+use App\Response\Stream;
 use App\Route\Route;
 use App\Autowiring\Autowiring;
 use App\Session;
@@ -83,7 +84,7 @@ class Core
         }
 
         if ($response instanceof AbstractResponse) {
-            if (!($response instanceof File)) {
+            if (!($response instanceof File) && !($response instanceof Stream)) {
                 echo $response->send();
             } else {
                 $response->send();

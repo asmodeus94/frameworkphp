@@ -39,7 +39,7 @@ class Json extends AbstractResponse
             $this->data['errors'] = [];
         }
 
-        krsort($this->data);
+        ksort($this->data);
     }
 
     /**

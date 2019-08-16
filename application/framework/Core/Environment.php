@@ -30,6 +30,9 @@ class Environment
         define('TEMPLATES', APP . 'view' . DIRECTORY_SEPARATOR);
 
         define('LOGS', APP . 'logs' . DIRECTORY_SEPARATOR);
+
+        define('PUBLIC_DIR', ROOT . 'public' . DIRECTORY_SEPARATOR);
+        define('UPLOAD', PUBLIC_DIR . 'upload' . DIRECTORY_SEPARATOR);
     }
 
     /**

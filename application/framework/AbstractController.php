@@ -37,17 +37,18 @@ abstract class AbstractController
     /**
      * Przygotowuje obiekt oodpowiedzi dla błędu
      *
-     * @param array $errors Tablica błędów
-     * @param int   $code   Kod błędu
+     * @param string $content Treść błędu
+     * @param array  $errors  Tablica błędów
+     * @param int    $code    Kod błędu
      *
      * @return AbstractResponse
      */
-    protected function responseError(array $errors = [], int $code = Code::INTERNAL_SERVER_ERROR)
+    protected function responseError(string $content = '', array $errors = [], int $code = Code::INTERNAL_SERVER_ERROR)
     {
         $response = [
             'status' => 'error',
-            'content' => '',
-            'errors' => $errors
+            'content' => $content,
+            'errors' => $errors,
         ];
 
         return $this->response($response, $code);

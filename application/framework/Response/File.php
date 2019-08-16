@@ -140,6 +140,9 @@ class File extends AbstractResponse
         return $this;
     }
 
+    /**
+     * Wysyła plik
+     */
     public function send(): void
     {
         if (!$this->sendFile) {

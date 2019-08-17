@@ -71,9 +71,9 @@ class Autowiring
     private function isGetOrPost(\ReflectionParameter $parameter)
     {
         $type = $parameter->getType()->getName();
-        $allowsNull = $parameter->getType()->allowsNull();
         $name = strtolower($parameter->getName());
         if (in_array($name, ['get', 'post']) && $type === 'array') {
+            $allowsNull = $parameter->getType()->allowsNull();
             if ($name === 'get') {
                 $get = Route::getInstance()->getRequest()->get();
                 return $allowsNull ? $get : (!empty($get) ? $get : []);
@@ -98,9 +98,9 @@ class Autowiring
     private function areCookies(\ReflectionParameter $parameter)
     {
         $type = $parameter->getType()->getName();
-        $allowsNull = $parameter->getType()->allowsNull();
-        $name = $parameter->getName();
         if (in_array($type, ['array', Cookie::class])) {
+            $allowsNull = $parameter->getType()->allowsNull();
+            $name = $parameter->getName();
             $cookies = Route::getInstance()->getRequest()->cookies();
             if (in_array(strtolower($name), ['cookie', 'cookies']) && $type === 'array') {
                 return $allowsNull ? $cookies : (!empty($cookies) ? $cookies : []);

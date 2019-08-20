@@ -26,6 +26,11 @@ class Autowiring
     private $interfacesRules = [];
 
     /**
+     * @var array
+     */
+    private $bindsRules = [];
+
+    /**
      * @var Cache
      */
     private $cache;
@@ -36,6 +41,7 @@ class Autowiring
         $this->method = $method;
 
         $this->interfacesRules = $this->loadRules('interfaces');
+        $this->bindsRules = $this->loadRules('binds');
 
         $this->cache = new Cache();
     }
@@ -134,7 +140,7 @@ class Autowiring
             if ($type === 'bool'
                 && ($parameterFromRequest === Hydrator::TRUE_VALUE_STRING || $parameterFromRequest === Hydrator::FALSE_VALUE_STRING)) {
                 return $parameterFromRequest === Hydrator::TRUE_VALUE_STRING;
-            } elseif ($type === gettype($parameterFromRequest)) {
+            } elseif ($type === TypeHelper::get($parameterFromRequest)) {
                 return $parameterFromRequest;
             } else {
                 return TypeHelper::cast($parameterFromRequest, $type);
@@ -158,6 +164,26 @@ class Autowiring
         }
 
         return null;
+    }
+
+    /**
+     * Analizuje parametr typu wbudowanego pod kątem możliwość przypisania do niego gotowego bindu
+     *
+     * @param \ReflectionParameter $parameter
+     * @param string               $invoker Nazwa klasy dla której wywołana została analiza parametrów
+     *
+     * @return mixed|null
+     */
+    private function analyzeBinds(\ReflectionParameter $parameter, string $invoker)
+    {
+        if (empty($this->bindsRules) || !isset($this->bindsRules[$invoker][$parameter->getName()])) {
+            return null;
+        }
+
+        $bind = $this->bindsRules[$invoker][$parameter->getName()];
+        $type = $parameter->getType()->getName();
+
+        return $type === TypeHelper::get($bind) ? $bind : TypeHelper::cast($bind, $type);
     }
 
     /**
@@ -199,6 +225,10 @@ class Autowiring
 
                     continue;
                 }
+            } elseif ($isBuiltin && ($bind = $this->analyzeBinds($parameter, $invoker)) !== null) {
+                $arguments[] = $bind;
+
+                continue;
             }
 
             if (!$isBuiltin && $type !== Cookie::class && ($instance = $this->makeInstance($type, $invoker)) !== null) {

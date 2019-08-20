@@ -40,6 +40,8 @@ class TypeHelper
             return (int)$var;
         } elseif ($type === 'float' || $type === 'double') {
             return (float)$var;
+        } elseif ($type === 'bool' || $type === 'boolean') {
+            return (bool)$var;
         } elseif ($type === 'array') {
             return (array)$var;
         } elseif ($type === 'string') {

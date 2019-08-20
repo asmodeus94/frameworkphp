@@ -12,15 +12,9 @@ use App\Response\DownloadableInterface;
 use App\Route\Route;
 use App\Autowiring\Autowiring;
 use App\Session;
-use Monolog\Logger;
 
 class Core
 {
-    /**
-     * @var Logger
-     */
-    private $logger;
-
     /**
      * @var Route
      */
@@ -29,7 +23,6 @@ class Core
     public function __construct()
     {
         Environment::init();
-        $this->logger = \App\Logger\Logger::core();
     }
 
     /**
@@ -78,9 +71,20 @@ class Core
             $response = $controller->{$method}();
         }
 
+        $this->handleResponse($response);
+    }
+
+    /**
+     * Obsługuje odpowiedź z kontrolera
+     *
+     * @param AbstractResponse|Redirect $response
+     *
+     * @throws \Exception|\Error
+     */
+    private function handleResponse($response)
+    {
         $instanceOfAbstractResponse = $response instanceof AbstractResponse;
-        $instanceOfRedirect = $response instanceof Redirect;
-        if (!$instanceOfAbstractResponse && !$instanceOfRedirect) {
+        if (!$instanceOfAbstractResponse && !($response instanceof Redirect)) {
             throw new \RuntimeException('Response is not an instance of AbstractResponse/Redirect class');
         }
 
@@ -90,7 +94,7 @@ class Core
             } else {
                 $response->send();
             }
-        } elseif ($instanceOfRedirect) {
+        } else {
             $response->make();
         }
     }
@@ -100,7 +104,7 @@ class Core
      */
     public function run(): void
     {
-        $hasResponse = $isError = false;
+        $hasResponse = false;
         $responseCode = null;
 
         try {
@@ -115,30 +119,31 @@ class Core
                 $this->callController($class, $method, $arguments);
                 $hasResponse = true;
             }
-        } catch (\Doctrine\DBAL\DBALException | \PDOException $ex) {
-            \App\Logger\Logger::db()->addCritical($ex);
-            $isError = true;
-        } catch (\Exception $ex) {
-            $this->logger->addError($ex);
-            $isError = true;
-        } catch (\Error $er) {
-            $this->logger->addCritical($er);
-            $isError = true;
-        }
-
-        if ($isError) {
-            $responseCode = Code::INTERNAL_SERVER_ERROR;
+        } catch (\Doctrine\DBAL\DBALException | \PDOException $e) {
+            \App\Logger\Logger::db()->addCritical($e);
+        } catch (\Exception $e) {
+            \App\Logger\Logger::core()->addError($e);
+        } catch (\Error $e) {
+            \App\Logger\Logger::core()->addCritical($e);
         }
 
         if ($hasResponse) {
             return;
-        } elseif (!$hasResponse && ServerHelper::isCli()) {
-            echo 'No endpoint selected!';
+        } elseif (ServerHelper::isCli()) {
+            if (isset($e)) {
+                echo 'An error occurred: ' . $e;
+            } else {
+                echo 'No endpoint selected!';
+            }
 
             return;
+        } elseif (defined('DEBUG') && isset($e)) {
+            throw $e;
         }
 
-        if ($responseCode === null) {
+        if (isset($e)) {
+            $responseCode = Code::INTERNAL_SERVER_ERROR;
+        } else {
             $responseCode = Code::NOT_FOUND;
         }
 

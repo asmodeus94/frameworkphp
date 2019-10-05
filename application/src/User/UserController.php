@@ -37,9 +37,9 @@ class UserController extends AbstractController
     /**
      * @param int|null $statusCode
      *
-     * @return Alert[]|null
+     * @return Alert[]
      */
-    private function getAlerts(?int $statusCode): ?array
+    private function getAlerts(?int $statusCode): array
     {
         $alerts = new Alerts($statusCode);
         $alerts->add(\View\Alerts\Type::SUCCESS, [Statuses::SUCCESS => 'Dodałeś użytkownika']);

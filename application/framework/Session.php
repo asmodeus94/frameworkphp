@@ -14,7 +14,7 @@ class Session
 
     private function __construct()
     {
-        if (!isset($_SESSION) && session_id() === '' && !ServerHelper::isCli()) {
+        if (!ServerHelper::isCli() && !isset($_SESSION) && session_id() === '') {
             session_start();
         }
     }

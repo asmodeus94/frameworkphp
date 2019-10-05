@@ -7,6 +7,7 @@ use App\Response\Code;
 use App\Response\DownloadableInterface;
 use App\Response\Json;
 use App\Response\AbstractResponse;
+use App\Response\Status;
 use App\Response\Type;
 
 abstract class AbstractController
@@ -46,7 +47,7 @@ abstract class AbstractController
     protected function responseError(string $content = '', array $errors = [], int $code = Code::INTERNAL_SERVER_ERROR)
     {
         $response = [
-            'status' => 'error',
+            'status' => Status::ERROR,
             'content' => $content,
             'errors' => $errors,
         ];

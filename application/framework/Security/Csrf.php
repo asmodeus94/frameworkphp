@@ -40,7 +40,7 @@ class Csrf
     public function checkToken(): void
     {
         $tokenFromSession = $this->session->get(self::TOKEN_NAME);
-        if ($tokenFromSession !== null && $this->request->getParameter(self::TOKEN_NAME) === $tokenFromSession) {
+        if (null !== $tokenFromSession && $this->request->getParameter(self::TOKEN_NAME) === $tokenFromSession) {
             return;
         }
 
@@ -64,7 +64,7 @@ class Csrf
      */
     public function getToken(): string
     {
-        if (($token = $this->session->get(self::TOKEN_NAME)) !== null) {
+        if (null !== ($token = $this->session->get(self::TOKEN_NAME))) {
             return $token;
         }
 

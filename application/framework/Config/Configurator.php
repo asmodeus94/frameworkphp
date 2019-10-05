@@ -87,28 +87,35 @@ class Configurator
      *
      * @param string $name
      *
-     * @return bool
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function removeFromStorage(string $name): bool
+    private function removeFromStorage(string $name): void
     {
-        $query = 'DELETE FROM `config` WHERE `name` = ? LIMIT 1';
-
-        return $this->db->query($query, [$name]);
+        $this->db->query('DELETE FROM `config` WHERE `name` = ? LIMIT 1', [$name]);
     }
 
     /**
-     * Usuwa konfigurację z bazy oraz z właściwości
+     * Metoda będąca aliasem dla remove
      *
-     * @param $name
+     * @param string $name
+     *
+     * @throws \Doctrine\DBAL\DBALException
+     * @see Configurator::remove()
+     */
+    public function __unset(string $name): void
+    {
+        $this->remove($name);
+    }
+
+    /**
+     * @param string $name
      *
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function __unset($name)
+    public function remove(string $name): void
     {
-        if ($this->removeFromStorage($name)) {
-            unset($this->data[$name]);
-        }
+        $this->removeFromStorage($name);
+        unset($this->data[$name]);
     }
 
     /**
@@ -119,7 +126,7 @@ class Configurator
      * @return mixed
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function __get(string $name)
+    public function get(string $name)
     {
         if (!array_key_exists($name, $this->data)) {
             $data = $this->getFromStorage($name);
@@ -130,6 +137,21 @@ class Configurator
     }
 
     /**
+     * Metoda będąca aliasem dla get
+     *
+     * @param string $name
+     *
+     * @return mixed
+     * @throws \Doctrine\DBAL\DBALException
+     *
+     * @see Configurator::get()
+     */
+    public function __get(string $name)
+    {
+        return $this->get($name);
+    }
+
+    /**
      * Zapisuje konfigurację w bazie oraz właściwości
      *
      * @param string $name
@@ -137,10 +159,39 @@ class Configurator
      *
      * @throws \Doctrine\DBAL\DBALException
      */
+    public function set(string $name, $data): void
+    {
+        $this->saveToStorage($name, $data);
+        $this->data[$name] = $data;
+    }
+
+    /**
+     * @param string $name
+     * @param mixed  $data
+     *
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function update(string $name, $data)
+    {
+        $currentData = $this->getFromStorage($name);
+        if (is_array($currentData) && is_array($data)) {
+            $data = array_replace_recursive($currentData, $data);
+        }
+        $this->set($name, $data);
+    }
+
+    /**
+     * Metoda będąca aliasem dla set
+     *
+     * @param string $name
+     * @param mixed  $data
+     *
+     * @throws \Doctrine\DBAL\DBALException
+     *
+     * @see Configurator::set()
+     */
     public function __set(string $name, $data): void
     {
-        if ($this->saveToStorage($name, $data)) {
-            $this->data[$name] = $data;
-        }
+        $this->set($name, $data);
     }
 }

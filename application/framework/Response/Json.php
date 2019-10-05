@@ -28,7 +28,7 @@ class Json extends AbstractResponse
         $hasErrors = !empty($this->data['errors']);
 
         if (!isset($this->data['status'])) {
-            $this->data['status'] = !$hasErrors ? 'ok' : 'error';
+            $this->data['status'] = !$hasErrors ? Status::OK : Status::ERROR;
         }
 
         if (!isset($this->data['content'])) {

@@ -10,11 +10,6 @@ class Stream extends AbstractResponse implements DownloadableInterface
      */
     private $streamGenerator;
 
-    /**
-     * Domyślna maksymalna przepustowość
-     */
-    private const DEFAULT_BANDWIDTH = 1024 * 1024;
-
     public function __construct(string $filename, \Generator $streamGenerator, ?string $contentType = null)
     {
         header('Content-Disposition: attachment; filename="' . $filename . '"');

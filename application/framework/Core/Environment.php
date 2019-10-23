@@ -9,7 +9,7 @@ class Environment
 {
     public static function init()
     {
-        if (getenv('ENVIRONMENT') === 'development' || ServerHelper::isCli()) {
+        if (getenv('ENVIRONMENT') === 'development' || ServerHelper::isCLI()) {
             define('DEBUG', 1);
         }
 
@@ -24,7 +24,8 @@ class Environment
     {
         define('CONFIG', APP . 'config' . DIRECTORY_SEPARATOR);
         define('CACHE', APP . 'cache' . DIRECTORY_SEPARATOR);
-        define('ROUTING', CONFIG . 'routing' . DIRECTORY_SEPARATOR);
+        define('ROUTING_RULES', CONFIG . 'routing' . DIRECTORY_SEPARATOR . 'rules' . DIRECTORY_SEPARATOR);
+        define('ROUTING_PATTERNS', CONFIG . 'routing' . DIRECTORY_SEPARATOR . 'patterns.php');
         define('AUTOWIRING', CONFIG . 'autowiring' . DIRECTORY_SEPARATOR);
 
         define('TEMPLATES', APP . 'view' . DIRECTORY_SEPARATOR);

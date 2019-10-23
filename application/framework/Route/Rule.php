@@ -138,7 +138,7 @@ class Rule
      *
      * @return $this
      */
-    public function setAllowedHttpMethods(array $allowedHttpMethods): Rule
+    public function setAllowedHttpMethods(array $allowedHttpMethods = []): Rule
     {
         $this->allowedHttpMethods =
             empty(array_diff($allowedHttpMethods, Request::ALLOWED_HTTP_METHODS))
@@ -188,7 +188,7 @@ class Rule
      */
     public function allowedOnlyCli(): Rule
     {
-        return $this->setAllowedHttpMethods([])->allowedCli();
+        return $this->setAllowedHttpMethods()->allowedCli();
     }
 
     /**

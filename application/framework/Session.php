@@ -12,10 +12,15 @@ class Session
      */
     private static $instance = null;
 
+    /**
+     * @var bool
+     */
+    private $exist = false;
+
     private function __construct()
     {
-        if (!ServerHelper::isCli() && !isset($_SESSION) && session_id() === '') {
-            session_start();
+        if (!Request::getInstance()->isAPI() && !ServerHelper::isCLI() && !isset($_SESSION) && session_id() === '') {
+            $this->exist = session_start();
         }
     }
 
@@ -40,6 +45,10 @@ class Session
      */
     public function refresh($deleteOldSession = true): bool
     {
+        if (!$this->exist) {
+            return true;
+        }
+
         return session_regenerate_id($deleteOldSession);
     }
 
@@ -52,7 +61,7 @@ class Session
      */
     public function get(string $index)
     {
-        if (!isset($_SESSION[$index])) {
+        if (!$this->exist || !isset($_SESSION[$index])) {
             return null;
         }
 
@@ -80,6 +89,10 @@ class Session
      */
     public function set(string $index, $value): void
     {
+        if (!$this->exist) {
+            return;
+        }
+
         $_SESSION[$index] = $value;
     }
 
@@ -144,7 +157,7 @@ class Session
      */
     public function destroy()
     {
-        if (!ServerHelper::isCli()) {
+        if ($this->exist && !ServerHelper::isCLI()) {
             session_unset();
             session_destroy();
             session_start();

@@ -17,6 +17,7 @@ class Json extends AbstractResponse
      */
     public function __construct(array $data = [])
     {
+        $this->setContentType(Type::APPLICATION_JSON);
         $this->data = $data;
     }
 

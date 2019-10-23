@@ -48,10 +48,17 @@ class Route
         'word' => '[a-zA-Z]+',
     ];
 
+    /**
+     * Wyrażenia regularne użytkownika wraz z predefiniowanymi
+     *
+     * @var array
+     */
+    private $patterns = [];
 
     private function __construct()
     {
         $this->loadRules();
+        $this->loadPatterns();
     }
 
     public static function getInstance(): Route
@@ -108,14 +115,14 @@ class Route
      */
     private function loadRules(): void
     {
-        $routingFiles = array_diff(scandir(ROUTING), ['.', '..']);
+        $routingFiles = array_diff(scandir(ROUTING_RULES), ['.', '..']);
         foreach ($routingFiles as $routingFile) {
             if (strpos($routingFile, '.php') === false) {
                 continue;
             }
 
             $routingGroupName = str_replace('.php', '', $routingFile);
-            $routingGroupRules = require ROUTING . $routingFile;
+            $routingGroupRules = require ROUTING_RULES . $routingFile;
 
             foreach ($routingGroupRules as $routingRuleName => $routingRule) {
                 $routingGroupRuleName = $routingGroupName . '-' . $routingRuleName;
@@ -141,6 +148,17 @@ class Route
     }
 
     /**
+     * Ładuje wzorce jakie mogą zostać użyte w dowolnych regułach routingu
+     */
+    private function loadPatterns(): void
+    {
+        $this->patterns = require ROUTING_PATTERNS;
+        foreach (self::PREDEFINED_PATTERNS_MAP as $patterName => $regexp) {
+            $this->patterns[$patterName] = $regexp;
+        }
+    }
+
+    /**
      * Na podstawie reguły routingu (jej ścieżki) tworzy wyr. regularne umożliwiające sprawdzenie poprawności ścieżki
      *
      * @param string $path
@@ -149,11 +167,8 @@ class Route
      */
     private function prepareRegexp(string $path): string
     {
-        $path = preg_replace('/\[(.*?)\]/', '(?:$1)?', str_replace(['/', '-'], ['\/', '\-'], $path));
-
-        preg_match_all('/(?:{[a-zA-Z_][a-zA-Z0-9_]+(?::[a-zA-Z]+)?})/', $path, $placeholderGroups);
-
-        $regexp = $path;
+        $regexp = preg_replace('/\[(.*?)]/', '(?:$1)?', str_replace(['/', '-'], ['\/', '\-'], $path));
+        preg_match_all('/(?:{[a-zA-Z_][a-zA-Z0-9_]+(?::[a-zA-Z]+)?})/', $regexp, $placeholderGroups);
         $placeholderGroups = $placeholderGroupsCopy = $placeholderGroups[0];
         foreach ($placeholderGroups as &$placeholder) {
             if (!preg_match('/{([a-zA-Z_][a-zA-Z0-9_]+)(?::([a-zA-Z]+))?}/', $placeholder, $placeholderAnalyzed)) {
@@ -163,8 +178,8 @@ class Route
             $placeholderRegexp = null;
             if ($placeholderAnalyzed[1] === self::MULTI_PARAMS_PATTERN) {
                 $placeholderRegexp = self::PREDEFINED_PATTERNS_MAP[self::MULTI_PARAMS_PATTERN];
-            } elseif (isset($placeholderAnalyzed[2]) && isset(self::PREDEFINED_PATTERNS_MAP[$placeholderAnalyzed[2]])) {
-                $placeholderRegexp = self::PREDEFINED_PATTERNS_MAP[$placeholderAnalyzed[2]];
+            } elseif (isset($placeholderAnalyzed[2]) && isset($this->patterns[$placeholderAnalyzed[2]])) {
+                $placeholderRegexp = $this->patterns[$placeholderAnalyzed[2]];
             }
 
             if ($placeholderRegexp === null) {
@@ -204,7 +219,7 @@ class Route
      */
     private function isAllowed(Rule $rule): bool
     {
-        if (!ServerHelper::isCli()) {
+        if (!ServerHelper::isCLI()) {
             $allowed =
                 in_array($this->request->getRequestMethod(), $rule->getAllowedHttpMethods())
                 && ($rule->isAllowedForEveryone() ||
@@ -303,7 +318,7 @@ class Route
                 $path = str_replace('{' . self::MULTI_PARAMS_PATTERN . '}', '/' . $multiParams, $path);
             }
 
-            $path = str_replace(['[', ']'], ['', ''], preg_replace(['/\[[^[]*?[{.*}]\]/', '/{.*?}/'], ['', ''], $path));
+            $path = str_replace(['[', ']'], ['', ''], preg_replace(['/\[[^[]*?[{.*}]]/', '/{.*?}/'], ['', ''], $path));
 
             if (!empty($query)) {
                 $path .= '?' . http_build_query($query);

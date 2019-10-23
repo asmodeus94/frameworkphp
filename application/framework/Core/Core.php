@@ -3,12 +3,14 @@
 namespace App\Core;
 
 
+use App\Core\Exception\ApiUnauthorizedException;
 use App\Helper\ServerHelper;
 use App\Redirect;
 use App\Request;
 use App\Response\AbstractResponse;
 use App\Response\Code;
 use App\Response\DownloadableInterface;
+use App\Response\Json;
 use App\Route\Route;
 use App\Autowiring\Autowiring;
 use App\Session;
@@ -62,13 +64,28 @@ class Core
     {
         [$constructorArguments, $methodArguments] = $arguments;
 
-        $controller = empty($constructorArguments) ? new $class()
-            : call_user_func_array([new \ReflectionClass($class), 'newInstance'], $constructorArguments);
+        try {
+            $controller = empty($constructorArguments) ? new $class()
+                : call_user_func_array([new \ReflectionClass($class), 'newInstance'], $constructorArguments);
+        } catch (ApiUnauthorizedException $e) {
+            $response = (new Json(['errors' => ['Unauthorized']]))->setCode(Code::UNAUTHORIZED);
+            $response->encode();
+        } catch (\Exception $e) {
+            throw $e;
+        } catch (\Error $e) {
+            throw $e;
+        }
 
-        if (!empty($methodArguments)) {
-            $response = call_user_func_array([$controller, $method], $methodArguments);
-        } else {
-            $response = $controller->{$method}();
+        if (isset($controller)) {
+            if (!empty($methodArguments)) {
+                $response = call_user_func_array([$controller, $method], $methodArguments);
+            } else {
+                $response = $controller->{$method}();
+            }
+        }
+
+        if (!isset($response)) {
+            throw new \RuntimeException('Response has not been set');
         }
 
         $this->handleResponse($response);
@@ -129,7 +146,7 @@ class Core
 
         if ($hasResponse) {
             return;
-        } elseif (ServerHelper::isCli()) {
+        } elseif (ServerHelper::isCLI()) {
             if (isset($e)) {
                 echo 'An error occurred: ' . $e;
             } else {

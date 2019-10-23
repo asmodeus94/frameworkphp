@@ -25,7 +25,6 @@ abstract class AbstractController
         if (is_array($response)) {
             $response = new Json($response);
             $response->encode();
-            $response->setContentType(Type::APPLICATION_JSON);
         }
 
         if (!($response instanceof DownloadableInterface)) {

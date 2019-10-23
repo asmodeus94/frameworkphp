@@ -14,7 +14,7 @@ abstract class AbstractResponse
      */
     public function setCode(int $code): AbstractResponse
     {
-        if (!ServerHelper::isCli()) {
+        if (!ServerHelper::isCLI()) {
             $availableCodes = array_flip(Code::getConstants());
             $code = isset($availableCodes[$code]) ? $code : Code::INTERNAL_SERVER_ERROR;
             http_response_code($code);
@@ -30,7 +30,7 @@ abstract class AbstractResponse
      */
     public function setContentType(string $type = Type::DEFAULT_TYPE): AbstractResponse
     {
-        if (!ServerHelper::isCli()) {
+        if (!ServerHelper::isCLI()) {
             $availableTypes = array_flip(Type::getConstants());
             $type = isset($availableTypes[$type]) ? $type : Type::DEFAULT_TYPE;
             header('Content-Type: ' . $type);

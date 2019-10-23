@@ -38,8 +38,14 @@ class Request
      */
     private $cookies = null;
 
-    const ALLOWED_HTTP_METHODS = ['GET', 'POST'];
+    const ALLOWED_HTTP_METHODS = ['GET', 'POST', 'DELETE', 'PUT'];
 
+    /**
+     * Czy żądanie pochodzi z API
+     *
+     * @var bool
+     */
+    private $api = false;
 
     private function __construct()
     {
@@ -68,7 +74,7 @@ class Request
      */
     private function collectData(): void
     {
-        if (!ServerHelper::isCli()) {
+        if (!ServerHelper::isCLI()) {
             $this->collectDataWeb();
         } else {
             $this->collectDataCli();
@@ -98,6 +104,10 @@ class Request
         $this->get = [];
 
         $this->path = !empty($_GET['_path_']) ? $_GET['_path_'] : null;
+        if ($this->path !== null) {
+            $this->api = preg_match('/^api\//', $this->path) === 1;
+        }
+
         unset($_GET['_path_']);
 
         if (empty($_GET)) {
@@ -203,5 +213,13 @@ class Request
         }
 
         return null;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAPI(): bool
+    {
+        return $this->api;
     }
 }

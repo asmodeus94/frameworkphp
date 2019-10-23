@@ -16,7 +16,6 @@ return [
         ->setMethod('test')
         ->setAllowedHttpMethods(['GET']),
     'testCli' => (new Rule('cli/{name}', \Dashboard\DashboardController::class, 'dbTest'))
-        ->setAllowedHttpMethods([])
-        ->allowedCli(true),
+        ->allowedOnlyCli(),
     'videoStream' => new Rule('video/stream', \Dashboard\DashboardController::class, 'videoStream'),
 ];

@@ -5,6 +5,6 @@ namespace App\Response;
 
 class Status
 {
-    const OK = 'ok';
-    const ERROR = 'error';
+    const OK = 'OK';
+    const ERROR = 'ERROR';
 }

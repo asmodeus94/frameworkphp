@@ -153,8 +153,8 @@ class Route
     private function loadPatterns(): void
     {
         $this->patterns = require ROUTING_PATTERNS;
-        foreach (self::PREDEFINED_PATTERNS_MAP as $patterName => $regexp) {
-            $this->patterns[$patterName] = $regexp;
+        foreach (self::PREDEFINED_PATTERNS_MAP as $patternName => $regexp) {
+            $this->patterns[$patternName] = $regexp;
         }
     }
 

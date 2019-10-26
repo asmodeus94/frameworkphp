@@ -183,7 +183,7 @@ class Autowiring
         $bind = $this->bindsRules[$invoker][$parameter->getName()];
         $type = $parameter->getType()->getName();
 
-        return $type === TypeHelper::get($bind) ? $bind : TypeHelper::cast($bind, $type);
+        return TypeHelper::get($bind) === $type ? $bind : TypeHelper::cast($bind, $type);
     }
 
     /**

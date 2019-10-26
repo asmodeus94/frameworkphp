@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Core\Exception;
+namespace App\Api\Exception;
 
 
 class ApiUnauthorizedException extends \Exception

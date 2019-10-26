@@ -3,7 +3,7 @@
 namespace App\Core;
 
 
-use App\Core\Exception\ApiUnauthorizedException;
+use App\Api\Exception\ApiUnauthorizedException;
 use App\Helper\ServerHelper;
 use App\Redirect;
 use App\Request;

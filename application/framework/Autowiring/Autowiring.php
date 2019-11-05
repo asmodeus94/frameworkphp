@@ -137,10 +137,11 @@ class Autowiring
         $type = $parameter->getType()->getName();
 
         if (($parameterFromRequest = Route::getInstance()->getRequest()->getParameter($parameter->getName())) !== null) {
-            if ($type === 'bool'
-                && ($parameterFromRequest === Hydrator::TRUE_VALUE_STRING || $parameterFromRequest === Hydrator::FALSE_VALUE_STRING)) {
-                return $parameterFromRequest === Hydrator::TRUE_VALUE_STRING;
-            } elseif ($type === TypeHelper::get($parameterFromRequest)) {
+            if ($type === 'bool') {
+                if (in_array($parameterFromRequest, [Hydrator::TRUE_VALUE_STRING, Hydrator::FALSE_VALUE_STRING])) {
+                    return Hydrator::TRUE_VALUE_STRING === $parameterFromRequest;
+                }
+            } elseif (TypeHelper::get($parameterFromRequest) === $type) {
                 return $parameterFromRequest;
             } else {
                 return TypeHelper::cast($parameterFromRequest, $type);

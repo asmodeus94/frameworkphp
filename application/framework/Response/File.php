@@ -107,7 +107,7 @@ class File extends AbstractResponse implements DownloadableInterface
         } else {
             $range = explode('-', $range);
             $cursorStart = $range[0];
-            $cursorEnd = (isset($range[1]) && is_numeric($range[1])) ? $range[1] : $this->size;
+            $cursorEnd = isset($range[1]) && is_numeric($range[1]) ? $range[1] : $this->size;
         }
 
         $cursorEnd = ($cursorEnd > $this->end) ? $this->end : $cursorEnd;

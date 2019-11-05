@@ -32,7 +32,7 @@ class Core
      * @param string|null $method
      *
      * @return bool
-     * @throws \ReflectionException
+     * @throws \ReflectionException|\RuntimeException
      */
     private function isCallable(?string $controller, ?string $method): bool
     {
@@ -41,9 +41,20 @@ class Core
         }
 
         $reflection = new \ReflectionClass($controller);
-        if ($reflection->isAbstract() || ($reflection->getConstructor() !== null && !$reflection->getConstructor()->isPublic())
-            || !$reflection->isSubclassOf('App\AbstractController') || !$reflection->hasMethod($method)) {
-            return false;
+        if ($reflection->isAbstract()) {
+            throw new \RuntimeException(sprintf('Controller (%s) cannot be abstract', $controller));
+        }
+
+        if (!$reflection->isSubclassOf('App\AbstractController')) {
+            throw new \RuntimeException(sprintf('Controller (%s) must be an instance of App\AbstractController', $controller));
+        }
+
+        if ($reflection->getConstructor() !== null && !$reflection->getConstructor()->isPublic()) {
+            throw new \RuntimeException(sprintf('Controller (%s) constructor must be public', $controller));
+        }
+
+        if (!$reflection->hasMethod($method)) {
+            throw new \RuntimeException(sprintf('Controller (%s) method (%s) does not exist', $controller, $method));
         }
 
         $reflection = new \ReflectionMethod($controller, $method);
@@ -148,7 +159,7 @@ class Core
             return;
         } elseif (ServerHelper::isCLI()) {
             if (isset($e)) {
-                echo 'An error occurred: ' . $e;
+                echo 'An error occurred!' . PHP_EOL . $e;
             } else {
                 echo 'No endpoint selected!';
             }

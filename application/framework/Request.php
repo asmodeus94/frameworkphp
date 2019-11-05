@@ -86,7 +86,7 @@ class Request
      */
     private function collectDataWeb(): void
     {
-        if ($this->requestMethod === 'POST' && !empty($_POST)) {
+        if ('POST' === $this->requestMethod && !empty($_POST)) {
             $this->post = $_POST;
         }
 
@@ -104,7 +104,7 @@ class Request
         $this->get = [];
 
         $this->path = !empty($_GET['_path_']) ? $_GET['_path_'] : null;
-        if ($this->path !== null) {
+        if (null !== $this->path) {
             $this->api = preg_match('/^api\//', $this->path) === 1;
         }
 
@@ -124,13 +124,13 @@ class Request
      */
     private function collectDataCli(): void
     {
-        if (($argument = $_SERVER['argv'][1] ?? null) === null) {
+        if (null === ($argument = $_SERVER['argv'][1] ?? null)) {
             return;
         }
 
         $this->get = [];
 
-        if (($position = stripos($argument, '?')) !== false) {
+        if (false !== ($position = stripos($argument, '?'))) {
             $this->path = substr($argument, 0, $position);
             $length = strlen($argument);
             $parsed = [];

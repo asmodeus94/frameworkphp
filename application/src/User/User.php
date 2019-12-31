@@ -43,7 +43,7 @@ class User
     /**
      * @return int|null
      */
-    public function getId(): ?int
+    public function getId()
     {
         return $this->id;
     }
@@ -51,9 +51,9 @@ class User
     /**
      * @param int $id
      *
-     * @return User
+     * @return $this
      */
-    public function setId(int $id): User
+    public function setId($id)
     {
         $this->id = $id;
 
@@ -63,7 +63,7 @@ class User
     /**
      * @return string|null
      */
-    public function getLogin(): ?string
+    public function getLogin()
     {
         return $this->login;
     }
@@ -71,9 +71,9 @@ class User
     /**
      * @param string $login
      *
-     * @return User
+     * @return $this
      */
-    public function setLogin(string $login): User
+    public function setLogin($login)
     {
         $this->login = $login;
 
@@ -83,7 +83,7 @@ class User
     /**
      * @return string|null
      */
-    public function getNick(): ?string
+    public function getNick()
     {
         return $this->nick;
     }
@@ -91,9 +91,9 @@ class User
     /**
      * @param string $nick
      *
-     * @return User
+     * @return $this
      */
-    public function setNick(string $nick): User
+    public function setNick($nick): User
     {
         $this->nick = $nick;
 
@@ -103,7 +103,7 @@ class User
     /**
      * @return string|null
      */
-    public function getPassword(): ?string
+    public function getPassword()
     {
         return $this->password;
     }
@@ -111,9 +111,9 @@ class User
     /**
      * @param string $password
      *
-     * @return User
+     * @return $this
      */
-    public function setPassword(string $password): User
+    public function setPassword($password)
     {
         $this->password = password_hash($password, PASSWORD_BCRYPT);
 
@@ -123,7 +123,7 @@ class User
     /**
      * @return string|null
      */
-    public function getEmail(): ?string
+    public function getEmail()
     {
         return $this->email;
     }
@@ -131,9 +131,9 @@ class User
     /**
      * @param string $email
      *
-     * @return User
+     * @return $this
      */
-    public function setEmail(string $email): User
+    public function setEmail($email)
     {
         $this->email = $email;
 
@@ -143,7 +143,7 @@ class User
     /**
      * @return string|null
      */
-    public function getLastSessionId(): ?string
+    public function getLastSessionId()
     {
         return $this->lastSessionId;
     }
@@ -151,9 +151,9 @@ class User
     /**
      * @param string $lastSessionId
      *
-     * @return User
+     * @return $this
      */
-    public function setLastSessionId(string $lastSessionId): User
+    public function setLastSessionId($lastSessionId)
     {
         $this->lastSessionId = $lastSessionId;
 
@@ -163,7 +163,7 @@ class User
     /**
      * @return string|null
      */
-    public function getLastActivity(): ?string
+    public function getLastActivity()
     {
         return $this->lastActivity;
     }
@@ -171,9 +171,9 @@ class User
     /**
      * @param string $lastActivity
      *
-     * @return User
+     * @return $this
      */
-    public function setLastActivity(string $lastActivity): User
+    public function setLastActivity($lastActivity)
     {
         $this->lastActivity = $lastActivity;
 

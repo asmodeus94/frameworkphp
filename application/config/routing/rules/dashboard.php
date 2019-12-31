@@ -15,7 +15,14 @@ return [
         ->setClass(\Dashboard\DashboardController::class)
         ->setMethod('test')
         ->setAllowedHttpMethods(['GET']),
-    'testCli' => (new Rule('cli/{name}', \Dashboard\DashboardController::class, 'dbTest'))
-        ->allowedOnlyCli(),
+    'testJson' => new Rule('test/json', \Dashboard\DashboardController::class, 'json'),
+    'cliDbWrite' => (new Rule('cli/prepare', \Dashboard\DashboardController::class, 'prepare'))
+        ->allowedCli(),
+    'dbDatesList' => new Rule('db/dates', \Dashboard\DashboardController::class, 'dbList'),
+    'dbDateDownload' => new Rule('db/date/download', \Dashboard\DashboardController::class, 'dbDateDownload'),
+    'dbSaveInFile' => new Rule('db/date/saveInFile', \Dashboard\DashboardController::class, 'dbSaveInFile'),
+    'dbSaveInFileNonBlocking' => new Rule('db/date/saveInFileNonBlocking', \Dashboard\DashboardController::class, 'dbSaveInFileNonBlocking'),
+    'cliDbDump' => (new Rule('db/cliDbDump', \Dashboard\DashboardController::class, 'cliDbDump'))->allowedCli(),
     'videoStream' => new Rule('video/stream', \Dashboard\DashboardController::class, 'videoStream'),
+    'sqlStream' => new Rule('text/stream', \Dashboard\DashboardController::class, 'sqlStream'),
 ];

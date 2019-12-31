@@ -127,7 +127,7 @@ class DB
         }
 
         $assocKeys = !is_int(array_keys($parameters)[0]);
-        if ($assocKeys && preg_match_all('/:([a-z][a-zA-Z0-9]*)/', $query, $placeholders)) {
+        if ($assocKeys && preg_match_all('/:([a-z][a-zA-Z0-9_]*)/', $query, $placeholders)) {
             $placeholders = array_flip($placeholders[1]);
         }
 
